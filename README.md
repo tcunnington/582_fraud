@@ -1,5 +1,11 @@
 # AMATH 582 Project -- Imbalanced Data, Fraud
 
+## Git workflow:
+1. git commit -m "fix Taylor's typos"
+2. git pull --rebase
+3. Resolve any conflicts
+4. Git push
+
 ## Notes:
 
 ### Background
@@ -24,6 +30,10 @@ A metric that does work well is the Area Under the Precision-Recall Curve (AUPRC
 3. Synthetic data generation (e.g. SMOTE) -- Generating artificial data from your existing data to generate more information for the classification algorithm to work with. Generated data should stay within the volume object (in n-dim space) that minimally encloses the existing data.
 4. Cost functions-- a cost function defines FNs as much less desirable than FPs.
 
-### References abd usefulness
+### Classification algorithms
+binary classification decision tree - fitctree
+binary regression tree - fitrtree
+
+### References and usefulness
 https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf
 https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve
