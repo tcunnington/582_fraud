@@ -4,7 +4,7 @@
 1. git commit -m "fix Taylor's typos"
 2. git pull --rebase
 3. Resolve any conflicts
-4. Git push
+4. git push
 
 ## Notes:
 
