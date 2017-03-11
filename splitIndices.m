@@ -1,5 +1,6 @@
-function [i_train, i_test] = splitIndices(n, ratio)
+function [i_train, i_test, numTrain, numTest] = splitIndices(n, ratio)
     numTrain = floor(ratio*n);
+    numTest = n - numTrain;
 
     % Mix it up
     ri = randperm(n);
