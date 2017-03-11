@@ -1,7 +1,7 @@
 # AMATH 582 Project -- Imbalanced Data, Fraud
 
 ## Git workflow:
-1. `git commit -m "fix Taylor's typos"``
+1. `git commit -m "fix typos"`
 2. `git pull --rebase`
 3. Resolve any conflicts
 4. `git push`

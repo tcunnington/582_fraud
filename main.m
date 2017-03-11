@@ -7,6 +7,8 @@ else
     readData
 end
 
+runTree = true;
+
 n = length(time);
 n0 = sum(class==0);
 n1 = sum(class==1);
@@ -15,65 +17,38 @@ fracpos = sum(class)/n;
 full = [data amount]; % time is not really important
 posData = full(class == 1,:);
 negData = full(class == 0,:);
-
 % plotFeatureSpace(posData, negData, [3 10 29]);
 
-%% Split data into test/train
-[iTrain, iTest] = splitIndices(n,0.8);
-trainData = full(iTrain,:);
-testData = full(iTest,:);
-nTrain = length(iTrain);
-nTest = length(iTest);
+%% Train and test models
+nIter = 5;
 
-%% Train and test model
-tree = fitctree(trainData,class(iTrain));%,'OptimizeHyperparameters','auto');
-pre = predict(tree, testData);
-% view(tree)
+ld = struct;
+ld.TPR = zeros(nIter,1);
+ld.FPR = zeros(nIter,1);
+ld.TNR = zeros(nIter,1);
+ld.FNR = zeros(nIter,1);
+ld.PPV = zeros(nIter,1);
 
-testClasses = class(iTest);
+tree = struct;
+tree.TPR = zeros(nIter,1);
+tree.FPR = zeros(nIter,1);
+tree.TNR = zeros(nIter,1);
+tree.FNR = zeros(nIter,1);
+tree.PPV = zeros(nIter,1);
 
-%% Evaluate performance
-tp = sum(pre == 1 & pre == testClasses);
-fp = sum(pre == 1 & pre ~= testClasses);
-tn = sum(pre == 0 & pre == testClasses);
-fn = sum(pre == 0 & pre ~= testClasses);
-
-% True/False Pos/Neg Rate
-TPR = tp./(tp + fn); % aka recall, sensitivity (out of pos. values)
-FPR = fp./(fp + tn); % aka fall-out, 1-TNR (out of neg. values)
-TNR = tn./(tn + fp); % aka specificity (out of neg. values)
-FNR = fn./(tp + fn); % aka miss rate, 1-TPR (out of pos. values)
-accuracy = (tp+tn)./nTest;
-errorRate = 1-accuracy;
-% Plot TPR against FPR to get receiver operating characteristic curve (ROC)
-% curve...
-% plot(TNR,TPR) % when these are matrices
-
-% PR curves
-precision = tp./(tp + fp); % was pos. when you guessed pos.
-recall = TPR;
-% plot(recall, precision); % once these are vectors over a certain
-% parameter...
-
-%%
-
-nIter = 100;
-TPR = zeros(nIter,1);
-FPR = zeros(nIter,1);
-PPV = zeros(nIter,1);
-
+disp('Start trials')
+tic % timer. note toc command(s) below
 for i=1:nIter
-    % Take Random sample for cross-validation
-    [negTrainInd, negTestInd, numNegTrain] = splitIndices(n0,0.8);
-    [posTrainInd, posTestInd, numPosTrain] = splitIndices(n1,0.8);
+    % Split data for cross-validation
+    [negTrainInd, negTestInd, numNegTrain, numNegTest] = splitIndices(n0,0.8);
+    [posTrainInd, posTestInd, numPosTrain, numPosTest] = splitIndices(n1,0.8);
     
     xtrain = [negData(negTrainInd,:); posData(posTrainInd,:)];
-    xtest = [negData(negTestInd,:); posData(posTestInd,:)];
-    ltrain = [zeros(numNegTrain,1)
-              ones(numPosTrain,1)];
+    xtest  = [negData(negTestInd,:);  posData(posTestInd,:)];
+    ltrain = [zeros(numNegTrain,1);   ones(numPosTrain,1)];
     
-%     iNeg = 1:n0;
-%     iPos = n0+1:n0+n1;
+    negIdxTest = 1:numNegTest;
+    posIdxTest = numNegTest+1:numNegTest+numPosTest;
     
 %     %% Gaussian Mixture Model
 %     try % Fails in <5% of test sets
@@ -85,23 +60,36 @@ for i=1:nIter
 %     [~,~,err(i,:),tot(i)] = validateUnsuper( 1:n1-nt1, n1-nt1+1:n1+n2-nt1-nt2, pre);
 
     % Linear discriminant analysis
-    pre = classify(xtest,xtrain,ltrain);
-    [TP,FN,FP,TN] = validate( iNeg, iPos, pre);
-    TPR(i) = TP/(TP+FN); % sensitivity, recall, hit rate, or true positive rate (TPR)
-    FPR(i) = FP/(FP+TN); % fall-out or false positive rate (FPR)
-    PPV(i) = TP/(TP+FP); % precision or positive predictive value (PPV)
-end
-disp(mean(TPR))
-disp(mean(FPR))
-disp(mean(PPV))
+    ldpre = classify(xtest,xtrain,ltrain);
+    [TP,FN,FP,TN] = validate( negIdxTest, posIdxTest, ldpre);
+    [ld.TPR(i), ld.FPR(i), ld.TNR(i), ld.FNR(i), ld.PPV(i)] = evaluate(TP,FN,FP,TN);
+    
+    if runTree
+        tree.model = fitctree(xtrain,ltrain); %,'OptimizeHyperparameters','auto');
+        treepre = predict(tree.model, xtest);
 
-%% Perform error anlysis
-function [TP,FN,FP,TN] = validate(iNeg,iPos,pre)
-    TP = sum( pre(iPos) == 1 );
-    TN = sum( pre(iNeg) == 0 );
-    FN = sum( pre(iPos) == 0 );
-    FP = sum( pre(iNeg) == 1 );
+        [TP,FN,FP,TN] = validate( negIdxTest, posIdxTest, treepre); 
+        [tree.TPR(i), tree.FPR(i), tree.TNR(i), tree.FNR(i), tree.PPV(i)] = evaluate(TP,FN,FP,TN);
+    end
+    
+    disp('iteration complete')
+    disp(toc)
 end
+
+ld.numTrain = numNegTrain + numPosTrain;
+ld.numTest = numNegTest + numPosTest;
+tree.numTrain = ld.numTrain;
+tree.numTest = ld.numTest;
+
+%% Evaluate performance...
+ld.meanTPR = mean(ld.TPR); % TPR = recall
+ld.meanPPV = mean(ld.PPV); % PPV = precision
+ld.meanFNR = mean(ld.FNR);
+
+tree.meanTPR = mean(tree.TPR);
+tree.meanPPV = mean(tree.PPV);
+tree.meanFNR = mean(tree.FNR);
+
 
 %% Plot error results
 % figure;
