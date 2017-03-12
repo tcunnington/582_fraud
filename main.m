@@ -16,6 +16,8 @@ else
     readData
 end
 
+runTree = true;
+
 n = length(time);
 n0 = sum(class==0);
 n1 = sum(class==1);
@@ -38,37 +40,60 @@ end
 % plotFeatureSpace(posData, negData, [3 10 29]);
 
 %% Run model nIter times
-nIter = 10;
-errorChar = zeros(7,nIter);
+nIter = 1;
+ratio = 0.8;
+nTest = ceil((1-ratio)*n);
+runTree = true;
+
+lda = struct;
+lda.prediction = zeros(nIter,nTest);
+lda.TPR = zeros(nIter,1);
+lda.FPR = zeros(nIter,1);
+lda.TNR = zeros(nIter,1);
+lda.FNR = zeros(nIter,1);
+lda.ACC = zeros(nIter,1);
+lda.PPV = zeros(nIter,1);
+
+tree = struct;
+tree.TPR = zeros(nIter,1);
+tree.FPR = zeros(nIter,1);
+tree.TNR = zeros(nIter,1);
+tree.FNR = zeros(nIter,1);
+tree.ACC = zeros(nIter,1);
+tree.PPV = zeros(nIter,1);
+disp('Starting trials')
 for i=1:nIter
     disp(['Running test ',num2str(i),' out of ',num2str(nIter)])
+    t = tic;
     % Initialize test and train subsets
-    [iTrain, iTest] = splitIndices(n,0.8);
+    [iTrain, iTest] = splitIndices(n,ratio);
     trainData = full(iTrain,:);
     testData = full(iTest,:);
     trainClasses = class(iTrain);
     testClasses = class(iTest);
     
     % Binary classification decision tree
-%     tree = fitctree(trainData,class(iTrain)); %,'OptimizeHyperparameters','auto');
-%     prediction = predict(tree, testData);
-% %     view(tree)
+    if runTree
+        treefit = fitctree(trainData,trainClasses); %,'OptimizeHyperparameters','auto');
+        tree.prediction(i,:) = predict(treefit, testData);
+%         view(tree)
+        [tree.TPR(i), tree.FPR(i), tree.TNR(i), tree.FNR(i), tree.ACC(i), tree.PPV(i)] = analyzePerformance(testClasses,tree.prediction(i,:)');
+    end
 
     % Linear discriminant analysis
-    prediction = classify(testData,trainData,trainClasses);
-
-    % Gaussian Mixture Model
-%     gm = fitgmdist(trainData,2);
-%     prediction = cluster(gm,testData);
+    lda.prediction(i,:) = classify(testData,trainData,trainClasses);
 
     % Evaluate performance
-    errorChar(:,i) = analyzePerformance(testClasses,prediction);
+    [lda.TPR(i), lda.FPR(i), lda.TNR(i), lda.FNR(i), lda.ACC(i), lda.PPV(i)] = analyzePerformance(testClasses,lda.prediction(i,:)');
+    t=toc(t);
+    disp(['Test ',num2str(i),' took ',num2str(t),' seconds.'])
 end
-%% Interpret error characteristics
-% PR Curve
 figure
 hold on
-scatter(errorChar(1,:),errorChar(7,:))
+scatter(lda.TPR,lda.PPV)
+if runTree
+    scatter(tree.TPR,tree.PPV)
+end
 plot([0,1],[0,1],'-r')
 hold off
 title('Precision-Recall')

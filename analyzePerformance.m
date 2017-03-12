@@ -7,8 +7,9 @@
 %   4   | False negative rate | Rate incorrectly classified negative, aka miss rate
 %   5   | Accuracy            | Rate correctly classified
 %   6   | Error rate          | Rate incorrectly classified
-%   7   | Precision           | Rate correct positive classifications
-function errorChar = analyzePerformance(testClasses,prediction)
+%   7   | Precision           | Rate correct positive classifications, aka
+%                               positive predictive value
+function [TPR,FPR,TNR,FNR,accuracy,precision] = analyzePerformance(testClasses,prediction)
     TP = sum(prediction == 1 & prediction == testClasses);
     FP = sum(prediction == 1 & prediction ~= testClasses);
     TN = sum(prediction == 0 & prediction == testClasses);
@@ -18,7 +19,5 @@ function errorChar = analyzePerformance(testClasses,prediction)
     TNR = TN./(TN + FP);
     FNR = FN./(TP + FN);
     accuracy = (TP+TN)./length(prediction);
-    errorRate = 1-accuracy;
     precision = TP./(TP + FP);
-    errorChar = [TPR;FPR;TNR;FNR;accuracy;errorRate;precision];
 end
