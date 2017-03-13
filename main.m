@@ -1,5 +1,6 @@
 clear,close,%clc;
-
+tic
+disp('Loading data and initializing')
 %% Initialize variables
 % amount  | amount of transaction in cents
 % time    | time of transaction in seconds
@@ -16,12 +17,13 @@ else
     readData
 end
 
-runTree = true;
+runTree = false;
 
 n = length(time);
 n0 = sum(class==0);
 n1 = sum(class==1);
-fracpos = sum(class)/n;
+fracpos = n1/n;
+ratiopos = n1/n0;
 
 full = [data amount]; % time is not really important
 posData = full(class == 1,:);
@@ -39,11 +41,26 @@ end
 % plotFeatureSpace(U(class==1,:), U(class==0,:), [1 2 3]);
 % plotFeatureSpace(posData, negData, [3 10 29]);
 
+%% Standardize / Normalize data?
+
+% Scaling is required for ADASYN's internal KNN search
+Z = zscore(full);
+
+%% Undersampling / Oversampling / ADASYN
+% TODO apply ADASYN only to the training data....
+disp(['Running ADASYN (',num2str(toc),')'])
+classBalance = 0.0865; % desired ratio of class 0 to class 1
+[synZ, synClassOut] = ADASYN(Z, class, classBalance);
+% nSyn = length(synClassOut);
+synFull = [Z; synZ];
+nSynFull = size(synFull,1);
+synClass = [class; synClassOut];
+
 %% Run model nIter times
 nIter = 1;
 ratio = 0.8;
 nTest = ceil((1-ratio)*n);
-runTree = true;
+% nSynTest = ceil((1-ratio)*nSynFull);
 
 lda = struct;
 lda.prediction = zeros(nIter,nTest);
@@ -54,6 +71,15 @@ lda.FNR = zeros(nIter,1);
 lda.ACC = zeros(nIter,1);
 lda.PPV = zeros(nIter,1);
 
+ldaSyn = struct;
+ldaSyn.prediction = zeros(nIter,nTest);
+ldaSyn.TPR = zeros(nIter,1);
+ldaSyn.FPR = zeros(nIter,1);
+ldaSyn.TNR = zeros(nIter,1);
+ldaSyn.FNR = zeros(nIter,1);
+ldaSyn.ACC = zeros(nIter,1);
+ldaSyn.PPV = zeros(nIter,1);
+
 tree = struct;
 tree.TPR = zeros(nIter,1);
 tree.FPR = zeros(nIter,1);
@@ -61,10 +87,12 @@ tree.TNR = zeros(nIter,1);
 tree.FNR = zeros(nIter,1);
 tree.ACC = zeros(nIter,1);
 tree.PPV = zeros(nIter,1);
-disp('Starting trials')
+
+disp(['Starting trials (',num2str(toc),')'])
 for i=1:nIter
     disp(['Running test ',num2str(i),' out of ',num2str(nIter)])
     t = tic;
+    
     % Initialize test and train subsets
     [iTrain, iTest] = splitIndices(n,ratio);
     trainData = full(iTrain,:);
@@ -82,15 +110,26 @@ for i=1:nIter
 
     % Linear discriminant analysis
     lda.prediction(i,:) = classify(testData,trainData,trainClasses);
+    
+    % LDA with synthetic data -- train with syn data but test with original
+    [iTrain, iTest] = splitIndices(nSynFull,ratio);
+    ldaSyn.prediction(i,:) = classify(testData, synFull(iTrain,:),synClass(iTrain));
 
     % Evaluate performance
-    [lda.TPR(i), lda.FPR(i), lda.TNR(i), lda.FNR(i), lda.ACC(i), lda.PPV(i)] = analyzePerformance(testClasses,lda.prediction(i,:)');
-    t=toc(t);
+    [lda.TPR(i), lda.FPR(i), lda.TNR(i), lda.FNR(i), lda.ACC(i), lda.PPV(i)] ...
+        = analyzePerformance(testClasses,lda.prediction(i,:)');
+    [ldaSyn.TPR(i), ldaSyn.FPR(i), ldaSyn.TNR(i), ldaSyn.FNR(i), ldaSyn.ACC(i), ldaSyn.PPV(i)] ...
+        = analyzePerformance(testClasses,ldaSyn.prediction(i,:)');
+    
+    t = toc(t);
     disp(['Test ',num2str(i),' took ',num2str(t),' seconds.'])
 end
+
+%% Plot
 figure
 hold on
 scatter(lda.TPR,lda.PPV)
+scatter(ldaSyn.TPR,ldaSyn.PPV)
 if runTree
     scatter(tree.TPR,tree.PPV)
 end

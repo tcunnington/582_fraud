@@ -7,7 +7,11 @@
 4. `git push`
 
 ## Work to do:
-1. Define scope of project
+1. Lee -- Research/implement best evaluation metrics
+2. Taylor -- implement 1 or 2 approaches to improve classification of imbalanced data (see below)
+3. Figure out how to alter classification threshold in MATLAB! If this cannot be done try to find an add-on or code posted elsewhere we can take advantage of...
+4. Add results to paper
+5. Transfer notes to paper
 
 ## Ideas on next steps:
 Sounds like synthetic data generation performs better that over/under sampling. I'd prefer to try that or cost function methods. Over/under sampling seem hacky and kinda stupid.
