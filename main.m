@@ -23,11 +23,10 @@ n = length(time);
 n0 = sum(class==0);
 n1 = sum(class==1);
 fracpos = n1/n;
-ratiopos = n1/n0;
 
 full = [data amount]; % time is not really important
-posData = full(class == 1,:);
-negData = full(class == 0,:);
+% posData = full(class == 1,:);
+% negData = full(class == 0,:);
 
 %% Explore feature space
 % Singular values and POD modes
@@ -41,100 +40,82 @@ end
 % plotFeatureSpace(U(class==1,:), U(class==0,:), [1 2 3]);
 % plotFeatureSpace(posData, negData, [3 10 29]);
 
-%% Standardize / Normalize data?
 
-% Scaling is required for ADASYN's internal KNN search
-Z = zscore(full);
+%% Test and train subsets
+ratio = 0.8;
+[trainData, testData, trainClasses, testClasses] = splitBinaryClassData(ratio, full, class);
 
 %% Undersampling / Oversampling / ADASYN
 % TODO apply ADASYN only to the training data....
 disp(['Running ADASYN (',num2str(toc),')'])
-classBalance = 0.0865; % desired ratio of class 0 to class 1
-[synZ, synClassOut] = ADASYN(Z, class, classBalance);
-% nSyn = length(synClassOut);
-synFull = [Z; synZ];
-nSynFull = size(synFull,1);
-synClass = [class; synClassOut];
+% Scaling is required for ADASYN's internal KNN search
+Ztrain = zscore(trainData);
+Ztest = zscore(testData);
+% ratiopos = n1/n0;
+classBalance = 0.1; % desired ratio of class 0 to class 1
+[synZ, synClassOut] = ADASYN(Ztrain, trainClasses, classBalance);
+synFull = [Ztrain; synZ];
+synClass = [trainClasses; synClassOut];
 
-%% Run model nIter times
-nIter = 1;
-ratio = 0.8;
-nTest = ceil((1-ratio)*n);
-% nSynTest = ceil((1-ratio)*nSynFull);
-
-lda = struct;
-lda.prediction = zeros(nIter,nTest);
-lda.TPR = zeros(nIter,1);
-lda.FPR = zeros(nIter,1);
-lda.TNR = zeros(nIter,1);
-lda.FNR = zeros(nIter,1);
-lda.ACC = zeros(nIter,1);
-lda.PPV = zeros(nIter,1);
-
-ldaSyn = struct;
-ldaSyn.prediction = zeros(nIter,nTest);
-ldaSyn.TPR = zeros(nIter,1);
-ldaSyn.FPR = zeros(nIter,1);
-ldaSyn.TNR = zeros(nIter,1);
-ldaSyn.FNR = zeros(nIter,1);
-ldaSyn.ACC = zeros(nIter,1);
-ldaSyn.PPV = zeros(nIter,1);
-
-tree = struct;
-tree.TPR = zeros(nIter,1);
-tree.FPR = zeros(nIter,1);
-tree.TNR = zeros(nIter,1);
-tree.FNR = zeros(nIter,1);
-tree.ACC = zeros(nIter,1);
-tree.PPV = zeros(nIter,1);
-
-disp(['Starting trials (',num2str(toc),')'])
-for i=1:nIter
-    disp(['Running test ',num2str(i),' out of ',num2str(nIter)])
-    t = tic;
-    
-    % Initialize test and train subsets
-    [iTrain, iTest] = splitIndices(n,ratio);
-    trainData = full(iTrain,:);
-    testData = full(iTest,:);
-    trainClasses = class(iTrain);
-    testClasses = class(iTest);
-    
-    % Binary classification decision tree
-    if runTree
-        treefit = fitctree(trainData,trainClasses); %,'OptimizeHyperparameters','auto');
-        tree.prediction(i,:) = predict(treefit, testData);
-%         view(tree)
-        [tree.TPR(i), tree.FPR(i), tree.TNR(i), tree.FNR(i), tree.ACC(i), tree.PPV(i)] = analyzePerformance(testClasses,tree.prediction(i,:)');
-    end
-
-    % Linear discriminant analysis
-    lda.prediction(i,:) = classify(testData,trainData,trainClasses);
-    
-    % LDA with synthetic data -- train with syn data but test with original
-    [iTrain, iTest] = splitIndices(nSynFull,ratio);
-    ldaSyn.prediction(i,:) = classify(testData, synFull(iTrain,:),synClass(iTrain));
-
-    % Evaluate performance
-    [lda.TPR(i), lda.FPR(i), lda.TNR(i), lda.FNR(i), lda.ACC(i), lda.PPV(i)] ...
-        = analyzePerformance(testClasses,lda.prediction(i,:)');
-    [ldaSyn.TPR(i), ldaSyn.FPR(i), ldaSyn.TNR(i), ldaSyn.FNR(i), ldaSyn.ACC(i), ldaSyn.PPV(i)] ...
-        = analyzePerformance(testClasses,ldaSyn.prediction(i,:)');
-    
-    t = toc(t);
-    disp(['Test ',num2str(i),' took ',num2str(t),' seconds.'])
+%% Classify
+disp(['Building/ running classification models (',num2str(toc),')'])
+% Binary classification decision tree
+if runTree
+    treefit = fitctree(trainData,trainClasses); %,'OptimizeHyperparameters','auto');
+    tree = evaluate(treefit, testData, testClasses);
 end
 
+% Linear discriminant analysis
+[iTrainSyn, ~] = splitIndices(size(synFull,1),ratio);
+% Baseline / default
+lda = evaluate(fitcdiscr(trainData, trainClasses), testData, testClasses);
+
+% LDA with cusotm cost function
+% NOTE: if you plan to vary cost many times use a single model and update
+% model.Cost then evaluate again.
+costs = [10 100 10^5 10^10];
+costModel = fitcdiscr(Ztrain, trainClasses,'ClassNames',[0,1]);
+for i=1:length(costs) % TODO is something wrong here?? all perf. values are exactly the same as vanilla LDA......
+    costModel.Cost = [0 1; costs(i) 0];
+%     R = confusionmat(costModel.Y,resubPredict(costModel))
+    ldaCosts(i) = evaluate(costModel, testData, testClasses);
+end
+
+% LDA with synthetic data -- train with syn data but test with original
+ldaSyn = evaluate(fitcdiscr(synFull, synClass), Ztest, testClasses);
+
+disp(['Done classifying (',num2str(toc),')'])
+    
+%% Run model nIter times
+% nIter = 1;
+% disp(['Starting trials (',num2str(toc),')'])
+% for i=1:nIter
+%     disp(['Running test ',num2str(i),' out of ',num2str(nIter)])
+%     t = tic;
+%     t = toc(t);
+%     disp(['Test ',num2str(i),' took ',num2str(t),' seconds.'])
+% end
+% % NOTE: if we are going to do cross validation MATLAB suggests:
+%     cvmodel = crossval(lda,'kfold',2);
+%     cverror = kfoldLoss(cvmodel)
+
 %% Plot
-figure
+plotModels = [lda ldaCosts ldaSyn];
+figure(1)
 hold on
-scatter(lda.TPR,lda.PPV)
-scatter(ldaSyn.TPR,ldaSyn.PPV)
+for c = arrayfun(@(s) [s.TPR,s.PPV], plotModels, 'un',0)
+    scatter(c{1}(1),c{1}(2))
+end
+% scatter(lda.TPR,lda.PPV)
+% scatter(ldaSyn.TPR,ldaSyn.PPV)
+% scatter(ldaCost.TPR,ldaCost.PPV)
 if runTree
     scatter(tree.TPR,tree.PPV)
 end
 plot([0,1],[0,1],'-r')
+legend('show','location','northwest')
 hold off
+
 title('Precision-Recall')
 xlabel('Recall')
 ylabel('Precision')
