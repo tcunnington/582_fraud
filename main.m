@@ -42,6 +42,8 @@ end
 
 
 %% Test and train subsets
+% TODO use kfold cross validation instead--it's better and actually easier
+% to implement.........
 ratio = 0.8;
 [trainData, testData, trainClasses, testClasses] = splitBinaryClassData(ratio, full, class);
 
@@ -68,7 +70,7 @@ end
 % Linear discriminant analysis
 [iTrainSyn, ~] = splitIndices(size(synFull,1),ratio);
 % Baseline / default
-lda = evaluate(fitcdiscr(trainData, trainClasses), testData, testClasses);
+lda = evaluate(fitcdiscr(Ztrain, trainClasses), Ztest, testClasses);
 
 % LDA with cusotm cost function
 % NOTE: if you plan to vary cost many times use a single model and update
