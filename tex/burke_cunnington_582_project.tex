@@ -22,7 +22,7 @@
 \begin{document}
 \maketitle
 \abstract{
- We consider the challenges in working with highly imbalanced data--data where the number of observations in class A far outnumber the number of observations in class B. The dataset we use for this project is a perfect example: credit card data from european cardholders where some transactions are fraudulent. To a credit card company instances of fraud are relatively rare in comparison to all transactions, but they are particularly important to be able to identify. The challenge with this type of dataset is twofold: 1. classification algorithms do not do a good job at making predictions when trained on such data, and 2. the common classifier performance metrics do not work to identify models that specifically predict the minority class well. This latter point is important because typically if you are considering a minority class then it is particularly important for prediction. Our central topic of investigation is how to evaluate classification techniques in a way that captures the importance of classifying the minority class correctly. To do so we attempt multiple classification techniques, as well as some specialized methods to deal specifically with this problem. 
+ We consider the challenges in working with highly imbalanced data--data where the number of observations in class A far outnumber the number of observations in class B. The dataset we use for this project is a perfect example: credit card data from european cardholders where some transactions are fraudulent. To a credit card company instances of fraud are relatively rare in comparison to all transactions, but they are particularly important to be able to identify. The challenge with this type of dataset is twofold: 1. classification algorithms do not do a good job at making predictions when trained on such data, and 2. the common classifier performance metrics do not work to identify models that specifically predict the minority class well. This latter point is important because typically if you are considering a minority class then it is particularly important for prediction. Our central topic of investigation is how to evaluate classification techniques in a way that captures the importance of classifying the minority class correctly. To do so we attempt multiple classification techniques, as well as some specialized methods to deal specifically with this problem.
 
 }
 \section{Introduction and Overview}
@@ -176,7 +176,7 @@ The confusion matrices for each classification scheme are:
           \ecm
 \end{align}
 We see the LDA with resampling outperforming the others in true positive classification, though it has orders of magnitude more false positives. Indeed, Figure 1 shows the ROC curves for each classification scheme. LDA and LDA with resampling are close contenders for most accurate, with SVM lagging far behind, and BCT skipping directly from \say{all negative} to \say{all positive} (this is likely a byproduct of Matlab's \say{continuous} output from BCT). It seems the resampling lets LDA outperform (in true positive rate) the otherwise competitive schemes, at a high cost of false positives.
-\begin{figure}[!htb]
+\begin{figure}[!t]
 	\centering
 	\includegraphics[width=0.8\textwidth]{ROC}
 	\caption{The ROC curve for LDA (blue), LDA with resampling (red), BCT (yellow), and SVM (purple) is shown. The LDA curves outperform the others here.}
@@ -184,7 +184,7 @@ We see the LDA with resampling outperforming the others in true positive classif
 \end{figure}
 
 Figure 2 shows the PR curves for the classification schemes. LDA still outperforms the other methods, though SVM is much closer to the front of the pack: and indeed, manages cover more of the recall domain than LDA. LDA with resampling has degraded to one of the worst schemes: positive predictions are not usually correct for this scheme). Nonetheless, both SVM and LDA are able to maintain precision above $80\%$ for recall above $70\%$, though better performance than this eludes these black-box algorithms.
-\begin{figure}[!htb]
+\begin{figure}[!t]
 	\centering
 	\includegraphics[width=0.8\textwidth]{PR}
 	\caption{The PR curve for LDA (blue), LDA with resampling (red), BCT (yellow), and SVM (purple) is shown. The LDA without resampling outperforms the others, with admirable performance by the SVM.}
