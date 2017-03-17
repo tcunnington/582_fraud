@@ -40,7 +40,7 @@ A brief theoretical exploration of each classification scheme and its evaluation
 \subsection{Classification}
 \subsubsection{Linear Discriminant Analysis}
 The LDA algorithm, \texttt{fitcdiscr} in MATLAB, builds normal probability distributions for each class with mean and covariance parameters $\left({\vec {\mu }}_{0}, \sigma_{0} \right) \left({\vec {\mu }}_{0}, \sigma_{0}\right) and \left({\vec {\mu }}_{1},\sigma_{1}\right) \left({\vec {\mu }}_{1}, \sigma_{1}\right)$
-These are referred to as the prior distributions. Classifying subsequent observations is then potentailly just a matter of comparing their probability of being in class 0 or 1 and applying a threshold.
+These are referred to as the prior distributions. Classifying subsequent observations is then potentially just a matter of comparing their probability of being in class 0 or 1 and applying a threshold.
 MATLAB actually attempts to minimize the cost function:
 \begin{equation}
 \hat{y}=\arg\min_{y=1,...,K}\sum_{k=1}^{K}\hat{P}(k|x)C(y|k)
@@ -50,8 +50,8 @@ $\hat{P}$ is determined from Bayes rule:
 \begin{equation}
 \hat{P}(k|x)=\frac{P(x|k)P(k)}{P(x)}
 \end{equation}
-Here the posterior probability that $x$ is in class $k$ is what LDA estmiates from the training data.
-$P(k)$ and $P(x)$ are readily calcuated the from the data.
+Here the posterior probability that $x$ is in class $k$ is what LDA estimates from the training data.
+$P(k)$ and $P(x)$ are readily calculated the from the data.
 Note that for the case of an extremely small minority class such as ours $P(n)$ will be extremely small (where $k=n$); this means that $\hat{P}(n|x)$ will be small as well.
 This is a source of bias for LDA toward the majority class.
 
@@ -66,12 +66,12 @@ The algorithm chooses where to put the boundaries based on minimizing the Gigi i
 G={\textstyle \sum_{k}p_{k}(1-p_{k})}
 \end{equation}
 Here $p_k$ is the proportion of points in a subsection of class $k$, summed over all classes.
-Note that the minimum you can acheive is 0 for a pure class and $0.50$ for half of each class. It calculates the Gini index for all the potenatial split points and chooses the lowest one in a greedy fashion--it does not consider global error. The criterion for no longer continuing to split the subspaces is often that you have too few training instances at a node.
+Note that the minimum you can achieve is 0 for a pure class and $0.50$ for half of each class. It calculates the Gini index for all the potential split points and chooses the lowest one in a greedy fashion--it does not consider global error. The criterion for no longer continuing to split the subspaces is often that you have too few training instances at a node.
 
-In the case of imbalanced data $p_k$ will always be very small for the minority class in the general case where the classes are highly overlapping. Even if the algorithm has narrowed down to a box that just barely contains all the minority class observations and just a small proportion of the majoirty class observations, it is still very possible that the number of majority class points in that space will be of a similar number or greater than the minority class. The Gini index naturally gives high weight to the more represented class, which is a bias for the majority class.
+In the case of imbalanced data $p_k$ will always be very small for the minority class in the general case where the classes are highly overlapping. Even if the algorithm has narrowed down to a box that just barely contains all the minority class observations and just a small proportion of the majority class observations, it is still very possible that the number of majority class points in that space will be of a similar number or greater than the minority class. The Gini index naturally gives high weight to the more represented class, which is a bias for the majority class.
 
 \subsubsection{Support Vector Machines}
-SVM attampts to find an $m$-dimensional hyperplane separating two classes, where $m$ is the number of features.
+SVM attempts to find an $m$-dimensional hyperplane separating two classes, where $m$ is the number of features.
 In the general case two classes are not linearly separable and so the algorithm attempts to minimize the cost function,
 \begin{equation}
 	\left[\frac{1}{n}\sum_{i=1}^{n}\max(0,1-y_{i}(\overrightarrow{w}\centerdot\overrightarrow{x_{i}}-b))\right]
@@ -92,7 +92,7 @@ Generated data generally stays within the n-dimensional volume that minimally en
 \item Cost functions-- Classification algorithms use cost functions (decision functions) to define their decision boundaries.
 With imbalanced data you would set the misclassification of the minority class to be much more costly, to encourage the algorithm to classify them correctly more often than the majority class.
 \end{enumerate}
-The first three attempt to reduce the imbalance by reducing the number of majority data point or increasing the number of minorty data points.
+The first three attempt to reduce the imbalance by reducing the number of majority data point or increasing the number of minority data points.
 These methods deal with the data only, not the classifier.
 The final option does alter the classifier however, to try to make it classify the minority class more reliably.
 
@@ -144,17 +144,6 @@ Unfortunately if an observation has an extremely small posterior probability the
 The SVM and tree classifiers were not altered. They were included to allow us to compare some ROC and/or PR curves for non-LDA approaches.
 
 \section{Computational Results}
-
-%GIVE BASELINE LDA RESULTS
-%
-%Altering the prediction cost function does not make a difference in our case.
-%Weighting false negatives as very costly makes very little difference, even when the cost of a false negative is $10^8$ as costly as a false positive.
-%This seems odd, since we only expect class $p$ to be about 500 times as likely class $n$ ($P(p) \approx 500 \times P(n)$).
-%There must be something else going on...
-%PERFORMANCE MATRICS
-%
-%Synthetic data generation did improve recall. As expected this came at the cost of precision and accuracy.
-%PERFORMANCE METRICS
 
 The confusion matrices for each classification scheme are:
 \begin{align}
