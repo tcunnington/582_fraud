@@ -141,57 +141,85 @@ The SVM and tree classifiers were not altered. They were included to allow us to
 
 \section{Computational Results}
 
-GIVE BASELINE LDA RESULTS
+%GIVE BASELINE LDA RESULTS
+%
+%Altering the prediction cost function does not make a difference in our case.
+%Weighting false negatives as very costly makes very little difference, even when the cost of a false negative is $10^8$ as costly as a false positive.
+%This seems odd, since we only expect class $p$ to be about 500 times as likely class $n$ ($P(p) \approx 500 \times P(n)$).
+%There must be something else going on...
+%PERFORMANCE MATRICS
+%
+%Synthetic data generation did improve recall. As expected this came at the cost of precision and accuracy.
+%PERFORMANCE METRICS
 
-Altering the prediction cost function does not make a difference in our case.
-Weighting false negatives as very costly makes very little difference, even when the cost of a false negative is $10^8$ as costly as a false positive.
-This seems odd, since we only expect class $p$ to be about 500 times as likely class $n$ ($P(p) \approx 500 \times P(n)$).
-There must be something else going on...
-PERFORMANCE MATRICS
-
-Synthetic data generation did improve recall. As expected this came at the cost of precision and accuracy.
-PERFORMANCE METRICS
-
+The confusion matrices for each classification scheme are:
+\begin{align}
+	\text{LDA:} & \bcm
+       56855    &       8 \\
+          30     &     69
+          \ecm \\
+	\text{LDA w/ADASYN:} & \bcm
+              56162       &  701 \\
+          16       &   83
+          \ecm \\
+	\text{BCT:} & \bcm
+              56845  &        18 \\
+          31       &   68
+          \ecm \\
+	\text{SVM:} & \bcm
+       56851 &         12 \\
+          29      &    70
+          \ecm
+\end{align}
+We see the LDA with resampling outperforming the others in true positive classification, though it has orders of magnitude more false positives. Indeed, Figure 1 shows the ROC curves for each classification scheme. LDA and LDA with resampling are close contenders for most accurate, with SVM lagging far behind, and BCT skipping directly from \say{all negative} to \say{all positive} (this is likely a byproduct of Matlab's \say{continuous} output from BCT). It seems the resampling lets LDA outperform (in true positive rate) the otherwise competitive schemes, at a high cost of false positives.
 \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=0.8\textwidth]{ROC}
-	\caption{}
+	\caption{The ROC curve for LDA (blue), LDA with resampling (red), BCT (yellow), and SVM (purple) is shown. The LDA curves outperform the others here.}
 	\label{fig:roc}
 \end{figure}
+
+Figure 2 shows the PR curves for the classification schemes. LDA still outperforms the other methods, though SVM is much closer to the front of the pack: and indeed, manages cover more of the recall domain than LDA. LDA with resampling has degraded to one of the worst schemes: positive predictions are not usually correct for this scheme). Nonetheless, both SVM and LDA are able to maintain precision above $80\%$ for recall above $70\%$, though better performance than this eludes these black-box algorithms.
 \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=0.8\textwidth]{PR}
-	\caption{}
+	\caption{The PR curve for LDA (blue), LDA with resampling (red), BCT (yellow), and SVM (purple) is shown. The LDA without resampling outperforms the others, with admirable performance by the SVM.}
 	\label{fig:pr}
 \end{figure}
 
+The area under these curves is tabulated in Table 1. The AUC corroborates the results above: LDA with resampling narrowly outperforms simple LDA, with SVM and BCT trailing. However, the AUCPR has some spurious results due to the threshold values chosen not producing the full curve. It seems likely that LDA would stay above $90\%$ for the other $0.7$ recall values, resulting in an additional area of about $0.65$, allowing it to outstrip the other methods.
 \begin{table}[!htb]
 	\centering
-	\caption{}
+	\caption{The area under the ROC and PR curves are summarized for each of the classification schemes discussed above.}
 	\label{tab:area}
 	\begin{tabular}{r|c|c}
-		& AUCs & AUCPR \\
+		& AUC & AUCPR \\
 		\hline
 		LDA & 0.976 & 0.124 \\
 		LDA w/ADASYN & 0.980 & 0.538 \\
-		Binary Classification Tree  & 0.868 & 0.416 \\
+		BCT  & 0.868 & 0.416 \\
 		SVM & 0.905 & 0.660
 	\end{tabular}
 \end{table}
 
 \section{Summary and Conclusions}
+Fraud detection is a difficult classification problem for three reasons: (1) data procurement, (2) feature extraction, and (3) class skew. This project investigates the latter problem exclusively, applying four classification algorithms, and analyzing the results with ROC curves and PR curves, and the area under those curves.
+
+We find that simple (and fast) LDA performs as well or better than the other schemes in both an ROC and PR context. Resampling using the ADASYN package allows for a higher true positive rate at the cost of many more false positives. Defining a cost function (an engineering or business question  more than a mathematical one) could help find a balance in this trade off. No method tested is able to find complete separation of the classes.
+
+More sophisticated tools may be able to achieve this separation. The use of nonlinear schemes and more careful application of sampling may allow for higher recall without the burden of higher false positive rates. Furthermore, more careful validation of the methods in this study is needed: there are several methods available for this process (including bootstrapping, $k$-fold cross-validation, and others\cite{boyd}) which can provide reasonable confidence in the ability of these methods to predict results for \say{wild} data.
 
 \clearpage
 \begin{thebibliography}{9}
 
-\bibitem{dalpozzolo}
-\texttt{https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf}
+\bibitem{boyd}
+Boyd, K., Eng, K. H., \& Page, C. D. (2013). Area under the Precision-Recall Curve: Point Estimates and Confidence Intervals. \emph{Machine Learning and Knowledge Discovery in Databases Lecture Notes in Computer Science}, 451-466.
 
-\bibitem{AUC}
-wiki: ROC, AUC
+\bibitem{fawcett}
+Fawcett, Tom (2006). "An Introduction to ROC Analysis" (PDF). \emph{Pattern Recognition Letters. 27} (8): 861–874
 
-\bibitem{machinelinearningmastery}
-\texttt{http://machinelearningmastery.com/classification-and-regression-trees-for-machine-learning/}
+\bibitem{pozzolo}
+Pozzolo, A. D., Caelen, O., Johnson, R. A., \& Bontempi, G. (2015). Calibrating Probability with Undersampling for Unbalanced Classification. \emph{2015 IEEE Symposium Series on Computational Intelligence}.
 
 \end{thebibliography}
 
