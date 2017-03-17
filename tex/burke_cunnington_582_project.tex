@@ -22,12 +22,13 @@
 \begin{document}
 \maketitle
 \abstract{
+ We consider the challenges in working with highly imbalanced data--data where the number of observations in class A far outnumber the number of observations in class B. The dataset we use for this project is a perfect example: credit card data from european cardholders where some transactions are fraudulent. To a credit card company instances of fraud are relatively rare in comparison to all transactions, but they are particularly important to be able to identify. The challenge with this type of dataset is twofold: 1. classification algorithms do not do a good job at making predictions when trained on such data, and 2. the common classifier performance metrics do not work to identify models that specifically predict the minority class well. This latter point is important because typically if you are considering a minority class then it is particularly important for prediction. Our central topic of investigation is how to evaluate classification techniques in a way that captures the importance of classifying the minority class correctly. To do so we attempt multiple classification techniques, as well as some specialized methods to deal specifically with this problem. 
+
 }
 \section{Introduction and Overview}
 Classifying bank transactions as fraudulent is a difficult task: (1) data is highly sensitive and so difficult to come by, (2) relevant features are not always clear, and (3) classification algorithms have trouble with unbalanced data where fraud is much less common than honest purchases.
 
-
-To answer the first problem, we analyze real credit card data from a challenge on \href{kaggle.com}{link?}. However, to preserve confidentiality, the features have been obscured by a singular value decomposition (SVD): we are given $U\Sigma$ if the original data $A=U\Sigma V^\ast$ in the usual SVD. That is, we have no say in the second problem, feature extraction. Indeed, the PCA modes have no discernable structure, and decay slowly. Instead, we focus on classifying skewed data.
+To answer the first problem, we analyze real credit card data from a challenge on \href{kaggle.com}{Kaggle.com}. However, to preserve confidentiality, the features have been obscured by a singular value decomposition (SVD): we are given $U\Sigma$ if the original data $A=U\Sigma V^\ast$ in the usual SVD. That is, we have no say in the second problem, feature extraction. Indeed, the PCA modes have no discernable structure, and decay slowly. Instead, we focus on classifying skewed data.
 
 That popular algorithms have trouble with skew is, in some sense, expected: minimizing the error rate inherently favors the major class. Guessing the larger class every time is already above $50\%$ accuracy. In addition, overall error is not the metric we care most about: false positives (mistakenly flagging a transaction as fraud) have much lower cost to the bank and consumer than false negatives (someone gets away with fraud). Our dataset is a great example of imbalanced data. Only $0.17\%$ of the data points are classified positive. It is difficult to improve on $99.83\%$ accuracy!
 
@@ -56,8 +57,8 @@ This is a source of bias for LDA toward the majority class.
 
 \subsubsection{Binary Classification Trees}
 
-Binary decision trees are a common and effective choice for classification tasks.
-The MATLAB command to build a binary classification decision tree model, \texttt{fitctree}, uses an algorithm called CART, for Classification and Regression Tree. You classify an unknown observation by starting at the root node and at each node in the tree you make binary decision (meaning there are two branches) based on the features of the data used for training. You work your way up the tree until you hit a terminal leaf node. This node determines your prediction.
+Binary decision trees (BCT) are a common and effective choice for classification tasks.
+The MATLAB command to build a BCT model, \texttt{fitctree}, uses an algorithm called CART, for Classification and Regression Tree. You classify an unknown observation by starting at the root node and at each node in the tree you make binary decision (meaning there are two branches) based on the features of the data used for training. You work your way up the tree until you hit a terminal leaf node. This node determines your prediction.
 
 You can think about this process as splitting up m-dimensional space into \say{blocks} (if you imagine the 3-dimensional version), where m is the number of features and each block represents a class prediction. It starts with the full space and splits it into two, then one of those subspaces in two, and then one of those three subspaces into two, and onwards until it finishes.
 The algorithm chooses where to put the boundaries based on minimizing the Gigi index:
