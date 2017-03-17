@@ -24,7 +24,7 @@
 \abstract{
 }
 \section{Introduction and Overview}
-Classifying bank transactions as fraudulent is a difficult task: (1) data is highly sensitive and so difficult to come by, (2) relevant features are not always clear, and (3) classification algorithms have trouble with unbalanced data where fraud is much less common than honest purchases. 
+Classifying bank transactions as fraudulent is a difficult task: (1) data is highly sensitive and so difficult to come by, (2) relevant features are not always clear, and (3) classification algorithms have trouble with unbalanced data where fraud is much less common than honest purchases.
 
 
 To answer the first problem, we analyze real credit card data from a challenge on \href{kaggle.com}{link?}. However, to preserve confidentiality, the features have been obscured by a singular value decomposition (SVD): we are given $U\Sigma$ if the original data $A=U\Sigma V^\ast$ in the usual SVD. That is, we have no say in the second problem, feature extraction. Indeed, the PCA modes have no discernable structure, and decay slowly. Instead, we focus on classifying skewed data.
@@ -34,7 +34,7 @@ That popular algorithms have trouble with skew is, in some sense, expected: mini
 We apply several methods learned in lecture, including linear discriminant analysis (LDA), a binary classification tree (BCT), and a support vector machine (SVM). A new method is used to reduce the skew in the class sizes in combination with LDA. We focus especially on how to compare the performance of these classifiers, because common performance metrics may not be as descriptive with high-cost, highly-skewed data.
 
 \section{Theoretical Background}
-A brief theoretical exploration of classification and its evaluation is given below.
+A brief theoretical exploration of each classification scheme and its evaluation with respect to imbalanced data are given below.
 
 \subsection{Classification}
 \subsubsection{Linear Discriminant Analysis}
@@ -55,6 +55,22 @@ Note that for the case of an extremely small minority class such as ours $P(n)$ 
 This is a source of bias for LDA toward the majority class.
 
 \subsubsection{Binary Classification Trees}
+
+Binary decision trees are a common and effective choice for classification tasks.
+The MATLAB command to build a binary classification decision tree model, \texttt{fitctree}, uses an algorithm called CART, for Classification and Regression Tree.
+It works in a very intuitive way. You might think about how you would classify a transaction as fruad if I knew transaction locations and times. You might say well if a given transaction is more than $100$ kilometers away from that person's home zip code then it's likely fraudulent and if it's less than that it is probably not. Similarly we might guess that if a transaction was made before 5am then it is liekly fraud, otherwise it's likely not. Binary decision trees ask such questions of our data using the features we give them, figuring out good \say{decision boundaries} such as $100$ and 5am to use. The result is a tree structure where you classify an unknown observation by starting at the root node and asking questions such as the above of that observation.
+At each node in the tree you make binary decision (meaning there are two branches) and you work your way up the tree until you hit a terminal leaf node. This node determines your prediction.
+
+You can think about this process as splitting up m-dimensional space into \say{blocks} (if you imagine the 3-dimensional version), where m is the number of features. It starts with the full space and splits it into two, then one of those subspaces in two, and then one of those three subspaces into two, and onwards until it finishes.
+At that point Each of the block represents a terminal node in the tree, and thus a prediction.
+The algorithm chooses where to put the boundaries based on minimizing the Gigi index:
+\begin{equation}
+G={\textstyle \sum_{k}p_{k}(1-p_{k})}
+\end{equation}
+Here $p_k$ is the proportion of points in a subsection of class $k$, summed over all classes.
+Note that the minimum you can acheive is 0 for a pure class and $0.50$ for half of each class. It calculates the Gini index for all the potenatial split points and chooses the lowest one in a greedy fashion--it does not consider global error. The criterion for no longer continuing to split the subspaces is often that you have too few training instances at a node.
+
+In the case of imbalanced data $p_k$ will always be very small for the minority class in the general case where the classes are highly overlapping. Even if the algorithm has narrowed down to a box that just barely contains all the minority class observations and just a small proportion of the majoirty class observations, it is still very possible that the number of majority class points in that space will be of a similar number or greater than the minority class. The Gini index naturally gives high weight to the more represented class, which is a bias for the majority class.
 
 \subsubsection{Support Vector Machines}
 
@@ -163,7 +179,7 @@ PERFORMANCE METRICS
 
 \clearpage
 \begin{thebibliography}{9}
-  
+
 \bibitem{dalpozzolo}
 \texttt{https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf}
 

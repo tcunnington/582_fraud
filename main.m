@@ -24,8 +24,6 @@ end
 data = [data amount]; % time does not seem to improve results
 
 %% Test and train subsets
-% TODO use kfold cross validation instead--it's better and actually easier
-% to implement.........
 [trainData, testData, trainClasses, testClasses] = ...
     splitBinaryClassData(ratio, data, class);
 
