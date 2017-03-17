@@ -38,7 +38,7 @@ A brief theoretical exploration of each classification scheme and its evaluation
 
 \subsection{Classification}
 \subsubsection{Linear Discriminant Analysis}
-The LDA algorithm builds normal probability distributions for each class with mean and covariance parameters $\left({\vec {\mu }}_{0}, \sigma_{0} \right) \left({\vec {\mu }}_{0}, \sigma_{0}\right) and \left({\vec {\mu }}_{1},\sigma_{1}\right) \left({\vec {\mu }}_{1}, \sigma_{1}\right)$
+The LDA algorithm, \texttt{fitcdiscr} in MATLAB, builds normal probability distributions for each class with mean and covariance parameters $\left({\vec {\mu }}_{0}, \sigma_{0} \right) \left({\vec {\mu }}_{0}, \sigma_{0}\right) and \left({\vec {\mu }}_{1},\sigma_{1}\right) \left({\vec {\mu }}_{1}, \sigma_{1}\right)$
 These are referred to as the prior distributions. Classifying subsequent observations is then potentailly just a matter of comparing their probability of being in class 0 or 1 and applying a threshold.
 MATLAB actually attempts to minimize the cost function:
 \begin{equation}
@@ -57,12 +57,9 @@ This is a source of bias for LDA toward the majority class.
 \subsubsection{Binary Classification Trees}
 
 Binary decision trees are a common and effective choice for classification tasks.
-The MATLAB command to build a binary classification decision tree model, \texttt{fitctree}, uses an algorithm called CART, for Classification and Regression Tree.
-It works in a very intuitive way. You might think about how you would classify a transaction as fruad if I knew transaction locations and times. You might say well if a given transaction is more than $100$ kilometers away from that person's home zip code then it's likely fraudulent and if it's less than that it is probably not. Similarly we might guess that if a transaction was made before 5am then it is liekly fraud, otherwise it's likely not. Binary decision trees ask such questions of our data using the features we give them, figuring out good \say{decision boundaries} such as $100$ and 5am to use. The result is a tree structure where you classify an unknown observation by starting at the root node and asking questions such as the above of that observation.
-At each node in the tree you make binary decision (meaning there are two branches) and you work your way up the tree until you hit a terminal leaf node. This node determines your prediction.
+The MATLAB command to build a binary classification decision tree model, \texttt{fitctree}, uses an algorithm called CART, for Classification and Regression Tree. You classify an unknown observation by starting at the root node and at each node in the tree you make binary decision (meaning there are two branches) based on the features of the data used for training. You work your way up the tree until you hit a terminal leaf node. This node determines your prediction.
 
-You can think about this process as splitting up m-dimensional space into \say{blocks} (if you imagine the 3-dimensional version), where m is the number of features. It starts with the full space and splits it into two, then one of those subspaces in two, and then one of those three subspaces into two, and onwards until it finishes.
-At that point Each of the block represents a terminal node in the tree, and thus a prediction.
+You can think about this process as splitting up m-dimensional space into \say{blocks} (if you imagine the 3-dimensional version), where m is the number of features and each block represents a class prediction. It starts with the full space and splits it into two, then one of those subspaces in two, and then one of those three subspaces into two, and onwards until it finishes.
 The algorithm chooses where to put the boundaries based on minimizing the Gigi index:
 \begin{equation}
 G={\textstyle \sum_{k}p_{k}(1-p_{k})}
