@@ -121,38 +121,3 @@ legend(modelNames,'Location','Best')
 xlabel('Recall')
 ylabel('Precision')
 title('Precision-Recall Curves')
-
-
-
-
-
-
-
-
-
-
-
-
-%% Explore feature space
-% Singular values and POD modes
-% S = zeros(size(data,2),1);
-% U = zeros(size(data));
-% for i=1:size(data,2)
-%     S(i)=norm(data(:,i));
-%     U(:,i)=data(:,i)/S(i);
-% end
-% plot(S)
-% plotFeatureSpace(U(class==1,:), U(class==0,:), [1 2 3]);
-% plotFeatureSpace(posData, negData, [3 10 29]);    
-%% Run model nIter times
-% nIter = 1;
-% disp(['Starting trials (',num2str(toc),')'])
-% for i=1:nIter
-%     disp(['Running test ',num2str(i),' out of ',num2str(nIter)])
-%     t = tic;
-%     t = toc(t);
-%     disp(['Test ',num2str(i),' took ',num2str(t),' seconds.'])
-% end
-% % NOTE: if we are going to do cross validation MATLAB suggests:
-%     cvmodel = crossval(lda,'kfold',2);
-%     cverror = kfoldLoss(cvmodel)
