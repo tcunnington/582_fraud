@@ -1,5 +1,6 @@
 ## MATLAB intermediate files
 *.m~
+tex/*.pdf
 
 ## Other, 582 specific
 *.mat

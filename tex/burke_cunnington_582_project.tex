@@ -70,6 +70,14 @@ Note that the minimum you can acheive is 0 for a pure class and $0.50$ for half 
 In the case of imbalanced data $p_k$ will always be very small for the minority class in the general case where the classes are highly overlapping. Even if the algorithm has narrowed down to a box that just barely contains all the minority class observations and just a small proportion of the majoirty class observations, it is still very possible that the number of majority class points in that space will be of a similar number or greater than the minority class. The Gini index naturally gives high weight to the more represented class, which is a bias for the majority class.
 
 \subsubsection{Support Vector Machines}
+SVM attampts to find an $m$-dimensional hyperplane separating two classes, where $m$ is the number of features.
+In the general case two classes are not linearly separable and so the algorithm attempts to minimize the cost function,
+\begin{equation}
+	\left[\frac{1}{n}\sum_{i=1}^{n}\max(0,1-y_{i}(\overrightarrow{w}\centerdot\overrightarrow{x_{i}}-b))\right]
+\end{equation}
+where $\overrightarrow{x_{i}}$ and $y_{i}$ are a training observation and the assigned class, and $\vec{w} \cdot {\vec {x}}-b=0$ is the equation of a hyperplane. Essentially what this gives is 0 for data points on the correct side of the plane and a positive value for points on the incorrect side, with magnitude proportional to the distance from the plane.
+
+Like the above two schemes it treats points from each class the same. It does not treat the minority class as more important to classify correctly, and since there are many more observations from the majority class this method will also be biased towards the majority class.
 
 \subsection{Handling Class Skew}
 There are some known methods for improving performance when classifying imbalanced data. The four common solution types are given here:
@@ -88,52 +96,48 @@ These methods deal with the data only, not the classifier.
 The final option does alter the classifier however, to try to make it classify the minority class more reliably.
 
 \subsection{Performance Evaluation}
-The first metric for evaluating a classification scheme is the \emph{confusion matrix}. We write \say{true} and \say{false} to mean correct and incorrect classifications, and in a binary classification like in this paper, we write \say{positive} and \say{negative} for the two class labels. Then we can construct a matrix which counts the total number of true positive (TP), false positive (FP), true negative (TN), and false negative (FN) labels:
-\begin{align}
-	C = \bcm TP & FN \\ FP & TN \ecm.
-\end{align}
-While this is a convenient, compact measure of performance, it does not tell the whole story. Most prominently, accuracy is easily defined as $(TP+TN)/(TP+TN+FP+FN)$, the number of correct classifications divided by the total number of classifications. This kind of \emph{rate} is best for describing behavior regardless of test sample size.
 
 \subsubsection{Receiver Operating Characteristics (ROC) Curve}
-It is often useful to consider the columns of the confusion matrix $C$ separately: this decouples discussions of accuracy from class skew and cost considerations. In particular, for classifiers with continuous output (of which all of the algorithms in Section II.1 are capable) the receiver operating characteristics (ROC) curve plots the true positive rate ($TPR$) against the false positive rate ($FPR$) for all threshold values.
-
-For test sets with a finite number of samples, this curve will be discontinuous (as the threshold passes each sample). The curve begins in the bottom left corner (all samples are labeled negative, so $TP=0$ and $FP=0$) and ends in the top right corner (all samples are labeled positive, so $TPR=1$ and $FPR=1$). The threshold value is chosen at the point \say{closest} to the top left corner ($TPR=1$ and $FPR=0$). Examining ROC curves visually, we can inspect how various classification algorithms approach this optimal condition, and what that says about how their possible behavior on future test sets.
 
 \subsubsection{Precision/Recall (PR) Curve}
-Another common metric is the Precision/Recall (PR) curve. Precision is defined as the number of true positive predictions divided by the total number of positive predictions: it is how frequently positive predictions are correct. Recall is defined as the number of true positive predictions divided by the total true positive samples in the test set: it is how frequently true positive samples were correctly classified. PR curves plot precision against recall for all threshold values of a continuous-output classifier.
-
-In contrast to ROC curves, PR curves are sensitive to class skew: they start near the top left corner (all samples are labeled negative so precision is not defined, but it is likely that nearly all will be correct for low threshold values) then end at the ratio of true positive to true negative samples (all samples are labeled positive, so recall is perfect while precision is exactly that ratio). \say{Better} schemes will approach the top right corner (where positive predictions are usually correct, and most of the true positive samples are correctly identified).
-
-Clearly, the PR curve is a better tool than the ROC curve for the application considered in this project: false positives can be tolerated, so long as most of the true positives are correctly classified (recall) and most of the positive hits actually are fraud (precision).
-
-\subsubsection{Area Under the Curve}
-We often want to reduce subjective, holistic comparisons of these curves into single values. One common way to do this is to compute the area under the curve (AUC for ROC curves and AUCPR for PR curves). This provides a metric for how \say{quickly} the classification scheme can approach ideal classification---in a sense, how robust it is to the optimal choice of threshold. For ROC curves, this is well defined: all ROC curves begin in the lower left corner and end in the upper right corner. Indeed, AUC can be shown to be the likelihood that a positive sample is ranked higher than a negative sample\cite{Fawcett}.
-
-PR curves do not have this property: they vary wildly in how they approach the left boundary, and if the threshold values are not chosen fine enough, it may not even start near the left boundary. However, we include discussion of this value below. It can be shown that AUCPR is the fraction of positive samples whose values exceed a random threshold\cite{boyd}.
-
-Many methods exist to compute both of these quantities, and confidence intervals on the curves\cite{boyd}\cite{fawcett}. In this project, we use only the built-in methods from Matlab's \texttt{perfcurve}, and do not perform bootstrapping or other methods to find confidence intervals.
+%
+%It's not just accuracy that serves as a poor metric in this task.
+%Precision and Recall are two common measures.
+%Plotting the former on the y-axis and the latter on the x-axis gives you Precision-Recall (PR) curves, which are often used to evaluate algorithms.
+%Recall is the fraction of positive entries that you correctly identified as positive: tp/(tp+fn).
+%Precision is the fraction of entries that were actually positive out of all the ones you guessed were positive: tp/(tp+fp).
+%
+%In our case we want to optimize for recall over precision.
+%That is, when we are given an input that is actually positive we want to correctly predict as much as possible that it is positive, even if that means we end up with false positives.
+%If we get false positives that lowers our precision, but since false negatives are more costly than false positives here we can accept potentially many more false positives.
+%
+%
+%For the reason above precision is not a good metric for this task.
+%For the functionality we want to optimize we will likely see precision increase over a simple majority class classifier, but we can't really be sure of the exact relationship.
+%A better metric would be one that is guaranteed to decrease monotonically as we approach our ideal of perfect recall, regardless of what happens to precision.
+%
+%A metric that does work well is the Area Under the Precision-Recall Curve (AUPRC)...
 
 \section{Algorithm Implementation and Development}
 
-As stated above our data was prepared and features provided as U columns of the SVD decomposition, so we did not alter or clean the data.
+As stated above our data was provided pre-prepared and instead of human understandable features it contained SVD modes, thus we did not alter or clean the data.
 We created a \say{full} data matrix $X$ from the 28 columns of U and the amount of the transaction.
 We used standard Z-score of the $X$ matrix, $Z$, for all implementations of the LDA classifier.
+Then we randomly split the data to conduct a Monte-Carlo cross validation, using 80\% of each class for training and 20\% for testing.
 
-Then we split the data for cross validation... or did we do k-fold validation??
-
-Using LDA as our classification algorithm we compared the synthetic data generation and alternate cost function approaches to the default algorithm.
+In order to compare methods we chose three classification schemes: LDA, classification trees, and SVM. LDA was our primary classification algorithm. We used it to investigate the synthetic data generation and alternate cost function approaches by comparing to the default algorithm.
 For synthetic data generation we chose to use ADASYN (Adaptive Synthetic Sampling Approach for Imbalanced Learning) a generation algorithm similar to the well known SMOTE (Synthetic Minority Over-Sampling Technique) algorithm, which is ADASYN's precursor.
 The goal of both is to improve the class balance by increasing the number of minority class members.
 SMOTE places synthetic data between existing data points randomly (linear interpolation), with no preference shown to any specific points.
 ADASYN does the same thing but places more synthetic data points close to the boundary between classes because those are the original data points that are more difficult to learn.
-(Does this favor decision trees or SVMs or something? I imagine that all this would do for an LDA is to move the mean of the minority gaussian close to the boundary...
-SMOTE might be better here...)
 
 We also tried changing the cost function of our LDA model to discourage FNs.
 Since LDA works by creating probability distributions the cost comes into play only when making predictions.
 Each observation that it is trying to predict has a calculated posterior probability.
 It tries to minimize the "classification cost"--this is a decision cost function.
 Unfortunately if an observation has an extremely small posterior probability then even with a vary large cost for miscalculating that observation it may not change the classification cost by much, meaning there will be little change to the resulting prediction.
+
+The SVM and tree classifiers were not altered. They were included to allow us to compare some ROC and/or PR curves for non-LDA approaches.
 
 \section{Computational Results}
 
@@ -194,10 +198,10 @@ wiki: ROC, AUC
 \begin{appendices}
 \section{MATLAB functions used and brief implementation explanation}
 \begin{itemize}
-	\item \texttt{fitctree}
-	\item \texttt{fitcsvm}
-	\item \texttt{fitcdiscr}
-	\item \texttt{ADASYN}
+	\item \texttt{fitctree} -- Binary classification tree
+	\item \texttt{fitcsvm} -- SVM classifier
+	\item \texttt{fitcdiscr} -- Linear discriminant analysis
+	\item \texttt{ADASYN} -- Synthetic data generation via the ADASYN algorithm
 	\item \texttt{predict}
 	\item \texttt{perfcurve}
 \end{itemize}
