@@ -9,14 +9,12 @@
 %\renewcommand{\lstlistingname}{Code}
 
 \title{AMATH 582: Final Project}
-\date{March \nth{14}, 2017}
+\date{March \nth{16}, 2017}
 \author{Lee Burke \\ Taylor Cunnington}
 
 \renewcommand{\thesection}{Sec.~\Roman{section}}
 %\renewcommand{\thesubsection}{\arabic{section} (\alph{subsection})}
 %\renewcommand{\thesubsubsection}{\arabic{section} (\alph{subsection}) (\roman{subsubsection})}
-
-\newcommand{\picheight}{1.75in}
 
 \usepackage{chngcntr}
 \counterwithout{figure}{section}
@@ -26,35 +24,20 @@
 \abstract{
 }
 \section{Introduction and Overview}
-Machine learning algorithms have trouble with unbalanced data.
-Algorithms are typically designed to minimize the error rate or something very similar.
-This inherently favors the majority class.
+Classifying bank transactions as fraudulent is a difficult task: (1) data is highly sensitive and so difficult to come by, (2) relevant features are not always clear, and (3) classification algorithms have trouble with unbalanced data where fraud is much less common than honest purchases. 
 
-Our dataset is a great example of imbalanced data.
-It is real credit card data and we are attempting to identify fraudulent transactions.
-Our dataset has only 492 of 284807 data points that are positive.
-This means that the positive class represents a mere 0.17\% of the total.
-In this light it's actually extremely easy to build a classifier with 99.83\% accuracy--just always predict negative!
 
-Accuracy, and therefore error, are not the metrics we care most about in this case.
-We want to be able to identify nearly all the fraudulent transactions.
-What we care about most is reducing false negatives (FNs).
-Unless the data is extremely well separated in, which ours is not, if we optimize for low numbers of FNs we will receive lower accuracy.
-This is because if the class distributions are overlapping then decreasing FPs by will increase false positives (FPs) by a much larger number.
-In light of this consideration it's immediately clear that we need a better way to measure the success of our algorithm besides accuracy.
+To answer the first problem, we analyze real credit card data from a challenge on \href{kaggle.com}{link?}. However, to preserve confidentiality, the features have been obscured by a singular value decomposition (SVD): we are given $U\Sigma$ if the original data $A=U\Sigma V^\ast$ in the usual SVD. That is, we have no say in the second problem, feature extraction. Indeed, the PCA modes have no discernable structure, and decay slowly. Instead, we focus on classifying skewed data.
 
-Because our dataset necessarily includes sensitive information the features have been obscured by an SVD decomposition.
-All features except some arbitrary time and transactions amount have been anonymized in this way, so we will not be performing any feature analysis in this work.
-We will instead concentrate on methods to work with imbalanced data.
-We focus specifically only how to evaluate the performance of a classifier in this scenario because, as covered more thoroughly below, common performance metrics do not work well.
-We will investigate performance metrics by applying methods known to help with imbalanced and comparing this to classification without those methods.
-We will use linear discriminant analysis as our classification scheme throughout.
+That popular algorithms have trouble with skew is, in some sense, expected: minimizing the error rate inherently favors the major class. Guessing the larger class every time is already above $50\%$ accuracy. In addition, overall error is not the metric we care most about: false positives (mistakenly flagging a transaction as fraud) have much lower cost to the bank and consumer than false negatives (someone gets away with fraud). Our dataset is a great example of imbalanced data. Only $0.17\%$ of the data points are classified positive. It is difficult to improve on $99.83\%$ accuracy!
+
+We apply several methods learned in lecture, including linear discriminant analysis (LDA), a binary classification tree (BCT), and a support vector machine (SVM). A new method is used to reduce the skew in the class sizes in combination with LDA. We focus especially on how to compare the performance of these classifiers, because common performance metrics may not be as descriptive with high-cost, highly-skewed data.
 
 \section{Theoretical Background}
+A brief theoretical exploration of classification and its evaluation is given below.
 
 \subsection{Classification}
-
-
+\subsubsection{Linear Discriminant Analysis}
 The LDA algorithm builds normal probability distributions for each class with mean and covariance parameters $\left({\vec {\mu }}_{0}, \sigma_{0} \right) \left({\vec {\mu }}_{0}, \sigma_{0}\right) and \left({\vec {\mu }}_{1},\sigma_{1}\right) \left({\vec {\mu }}_{1}, \sigma_{1}\right)$
 These are referred to as the prior distributions. Classifying subsequent observations is then potentailly just a matter of comparing their probability of being in class 0 or 1 and applying a threshold.
 MATLAB actually attempts to minimize the cost function:
@@ -71,6 +54,11 @@ $P(k)$ and $P(x)$ are readily calcuated the from the data.
 Note that for the case of an extremely small minority class such as ours $P(n)$ will be extremely small (where $k=n$); this means that $\hat{P}(n|x)$ will be small as well.
 This is a source of bias for LDA toward the majority class.
 
+\subsubsection{Binary Classification Trees}
+
+\subsubsection{Support Vector Machines}
+
+\subsection{Handling Class Skew}
 There are some known methods for improving performance when classifying imbalanced data. The four common solution types are given here:
 \begin{enumerate}
 \item Under-sampling -- Removing data from the larger class to balance the class sizes.
@@ -86,24 +74,28 @@ The first three attempt to reduce the imbalance by reducing the number of majori
 These methods deal with the data only, not the classifier.
 The final option does alter the classifier however, to try to make it classify the minority class more reliably.
 
-\subsection{Performance evaluation}
+\subsection{Performance Evaluation}
 
-It's not just accuracy that serves as a poor metric in this task.
-Precision and Recall are two common measures.
-Plotting the former on the y-axis and the latter on the x-axis gives you Precision-Recall (PR) curves, which are often used to evaluate algorithms.
-Recall is the fraction of positive entries that you correctly identified as positive: tp/(tp+fn).
-Precision is the fraction of entries that were actually positive out of all the ones you guessed were positive: tp/(tp+fp).
+\subsubsection{Receiver Operating Characteristics (ROC) Curve}
 
-In our case we want to optimize for recall over precision.
-That is, when we are given an input that is actually positive we want to correctly predict as much as possible that it is positive, even if that means we end up with false positives.
-If we get false positives that lowers our precision, but since false negatives are more costly than false positives here we can accept potentially many more false positives.
-
-
-For the reason above precision is not a good metric for this task.
-For the functionality we want to optimize we will likely see precision increase over a simple majority class classifier, but we can't really be sure of the exact relationship.
-A better metric would be one that is guaranteed to decrease monotonically as we approach our ideal of perfect recall, regardless of what happens to precision.
-
-A metric that does work well is the Area Under the Precision-Recall Curve (AUPRC)...
+\subsubsection{Precision/Recall (PR) Curve}
+%
+%It's not just accuracy that serves as a poor metric in this task.
+%Precision and Recall are two common measures.
+%Plotting the former on the y-axis and the latter on the x-axis gives you Precision-Recall (PR) curves, which are often used to evaluate algorithms.
+%Recall is the fraction of positive entries that you correctly identified as positive: tp/(tp+fn).
+%Precision is the fraction of entries that were actually positive out of all the ones you guessed were positive: tp/(tp+fp).
+%
+%In our case we want to optimize for recall over precision.
+%That is, when we are given an input that is actually positive we want to correctly predict as much as possible that it is positive, even if that means we end up with false positives.
+%If we get false positives that lowers our precision, but since false negatives are more costly than false positives here we can accept potentially many more false positives.
+%
+%
+%For the reason above precision is not a good metric for this task.
+%For the functionality we want to optimize we will likely see precision increase over a simple majority class classifier, but we can't really be sure of the exact relationship.
+%A better metric would be one that is guaranteed to decrease monotonically as we approach our ideal of perfect recall, regardless of what happens to precision.
+%
+%A metric that does work well is the Area Under the Precision-Recall Curve (AUPRC)...
 
 \section{Algorithm Implementation and Development}
 
@@ -140,16 +132,64 @@ PERFORMANCE MATRICS
 Synthetic data generation did improve recall. As expected this came at the cost of precision and accuracy.
 PERFORMANCE METRICS
 
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{ROC}
+	\caption{}
+	\label{fig:roc}
+\end{figure}
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{PR}
+	\caption{}
+	\label{fig:pr}
+\end{figure}
+
+\begin{table}[!htb]
+	\centering
+	\caption{}
+	\label{tab:area}
+	\begin{tabular}{r|c|c}
+		& AUCs & AUCPR \\
+		\hline
+		LDA & 0.976 & 0.124 \\
+		LDA w/ADASYN & 0.980 & 0.538 \\
+		Binary Classification Tree  & 0.868 & 0.416 \\
+		SVM & 0.905 & 0.660
+	\end{tabular}
+\end{table}
+
 \section{Summary and Conclusions}
 
 \clearpage
+\begin{thebibliography}{9}
+  
+\bibitem{dalpozzolo}
+\texttt{https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf}
+
+\bibitem{AUC}
+wiki: ROC, AUC
+
+\bibitem{machinelinearningmastery}
+\texttt{http://machinelearningmastery.com/classification-and-regression-trees-for-machine-learning/}
+
+\end{thebibliography}
+
 \begin{appendices}
 \section{MATLAB functions used and brief implementation explanation}
 \begin{itemize}
-	\item
+	\item \texttt{fitctree}
+	\item \texttt{fitcsvm}
+	\item \texttt{fitcdiscr}
+	\item \texttt{ADASYN}
+	\item \texttt{predict}
+	\item \texttt{perfcurve}
 \end{itemize}
 
 \section{MATLAB codes}
-%\lstinputlisting[caption=main, label=main]{main.m}
+\lstinputlisting[caption=Main, label=code:main]{../main.m}
+\lstinputlisting[caption=Split data into training and test sets, label=code:splitBinaryClassData]{../splitBinaryClassData.m}
+\lstinputlisting[caption=Random permutation for indices, label=code:splitIndices]{../splitIndices.m}
+\lstinputlisting[caption=Performance characteristics of a classification model, label=code:evaluate]{../evaluate.m}
 \end{appendices}
 \end{document}
