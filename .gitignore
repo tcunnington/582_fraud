@@ -2,9 +2,10 @@
 *.m~
 tex/*.pdf
 
-## Other, 582 specific
+## Other...
 *.mat
 creditcard.csv
+.idea/
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
