@@ -6,6 +6,7 @@ tex/*.pdf
 *.mat
 creditcard.csv
 .idea/
+.ipynb_checkpoints/
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
