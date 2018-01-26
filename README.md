@@ -20,6 +20,10 @@ Update the notes below to bring in line with the paper
 
 ## Old Notes:
 
+### Goal of the project:
+To consider the effect of over/under sampling methods on imbalanced data. We also take the opportunity to experiment with various classification algorithms.
+
+
 ### Background
 Machine learning algorithms have trouble with unbalanced data. Algorithms are typically designed to minimize the error rate or something very similar. This inherently favors the majority class.
 
