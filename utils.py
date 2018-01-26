@@ -123,7 +123,7 @@ def tile_random_features(feature_list, df):
 
     plt.show()
 
-def plot_roc(test_y, y_score):i
+def plot_roc(test_y, y_score):
     fpr, tpr, _ = roc_curve(test_y, y_score)
     roc_auc = auc(fpr, tpr)
 

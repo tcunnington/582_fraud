@@ -1,17 +1,7 @@
 # AMATH 582 Project -- Imbalanced Data -- Fraud Detection Problem
 
 
-## Python Update MVP
-Rebuild the 3-4 classification methods
-- Does the vanilla version handle imbalanced classes well?
-- If not, how might the method be altered to do so? Is it possible?
-- If it's possible then implement it and run against the original dataset.
-
-Choose just one of SMOTE or ADASYN
-- Create new dataset
-- Compare results for each method on the two different datasets
-- Compare with over/under sampling
-
+## Python Update TODO
 Update the notes below to bring in line with the paper
 - Give motivation and proposed solutions (at level of "philosophical" perspective)
 - Detail an understanding of each of the methods used
@@ -72,9 +62,11 @@ The question then becomes how to build the tree. What are the split points chose
 
 
 ### References and usefulness
+http://contrib.scikit-learn.org/imbalanced-learn/stable/user_guide.html
 https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf
 https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve
 http://machinelearningmastery.com/classification-and-regression-trees-for-machine-learning/
+http://danielhnyk.cz/creating-your-own-estimator-scikit-learn/
 
 
 ## Git workflow:
