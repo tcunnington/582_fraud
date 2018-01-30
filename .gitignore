@@ -1,8 +1,9 @@
 ## MATLAB intermediate files
 *.m~
-tex/*.pdf
 
-## Other...
+## Other
+*.pyc
+tex/*.pdf
 *.mat
 creditcard.csv
 .idea/

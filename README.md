@@ -1,64 +1,56 @@
 # AMATH 582 Project -- Imbalanced Data -- Fraud Detection Problem
 
 
-## Python Update TODO
-Update the notes below to bring in line with the paper
-- Give motivation and proposed solutions (at level of "philosophical" perspective)
-- Detail an understanding of each of the methods used
-- Discuss results
-
-
-## Old Notes:
-
 ### Goal of the project:
-To consider the effect of over/under sampling methods on imbalanced data. We also take the opportunity to experiment with various classification algorithms.
-
+To consider classification methods in the presence of highly imbalanced data--binary data where a majority class far outnumbers the minority class. We will cover how to evaluate methods in a way that captures the importance of classifying the minority class correctly, as well as ways to improve these methods. 
 
 ### Background
-Machine learning algorithms have trouble with unbalanced data. Algorithms are typically designed to minimize the error rate or something very similar. This inherently favors the majority class.
 
-Our dataset is a great example of imbalanced data. It is real credit card data and we are attempting to identify fraudulent transactions. Our dataset has only 492 of 284807 data points that are positive. This means that the positive class represents a mere 0.17% of the total. In this light it's actually extremely easy to build a classifier with 99.83% accuracy--just always predict negative!
+The dataset we use for this project is a perfect example of imbalanced data: credit card transactions from european cardholders where some transactions are fraudulent. To a credit card company instances of fraud are relatively rare in comparison to all transactions, but they are particularly important to be able to identify because they are very costly. 
 
-Accuracy, and therefore error, are not the metrics we care most about in this case. We want to be able to identify nearly all the fraudulent transactions. What we care about most is reducing false negatives (FNs). Unless the data is extremely well separated in, which ours is not, if we optimize for low numbers of FNs we will receive lower accuracy. This is because if the class distributions are overlapping then decreasing FPs by will increase false positives (FPs) by a much larger number. In light of this consideration it's immediately clear that we need a better way to measure the success of our algorithm besides accuracy.
+Classifying bank transactions as fraudulent is a difficult task: (1) data is highly sensitive and so difficult to come by, (2) relevant features are not always clear, and (3) classification algorithms have trouble with unbalanced data where fraud is much less common than honest purchases.
+To answer the first problem, we analyze real credit card data from a challenge on Kaggle.com. How- ever, to preserve confidentiality, the features have been obscured by a singular value decomposition (SVD): we are given UΣ if the original data $A = UΣV^∗$ in the usual SVD. This means we have no say in the second problem, feature extraction, and so we will not attempt anything in this regard (it doesn't appear to be a good candidate for dimensionlity reduction either). Instead, we focus on classification.
+ 
+ There are two main challenges for us in classifying this data: 
+1. Classification algorithms predict the minority class well when trained on such data.
+2. The common classifier performance metrics do not align with our preference for predicting the minority class when working with data such as this. This is also the reason that these algorithms do not perform well: they are optimized for a less-ideal metric such as reducing error.
 
-Because our dataset necessarily includes sensitive information the features have been obscured by an SVD decomposition. All features except some arbitrary time and transactions amount have been anonymized in this way, so we will not be performing any feature analysis in this work. We will instead concentrate on methods to work with imbalanced data. We focus specifically only how to evaluate the performance of a classifier in this scenario because, as covered more thoroughly below, common performance metrics do not work well. We will investigate performance metrics by applying methods known to help with imbalanced and comparing this to classification without those methods.
+That popular algorithms have trouble with skew is not all that surprising: these algorithms typically work to minimize the error rate, which inherently favors the majority class. Guessing the larger class every time is already above 50% accuracy. Our dataset is very imbalanced: only 0.17% of the data points are classified positive. If we want high accuracy then let's just always guess negative--it's difficult to improve on 99.83% accuracy! We won't be doing that, but we will attempt to alter our methods if possible. We will cover several methods learned in lecture including quadratic discriminant analysis (QDA), a binary classification tree (CART), and logistic regression. 
 
-
+So clearly overall error is not the metric we care most about. What we _do_ a lot about is false negatives (FNs: someone gets away with fraud). We care to a much lesser extent about false positives (FPs: mistakenly flagging a transaction as fraud). Because our classes are not well separated (see either ipython notebook) we will have to accept a lower accuracy in exchange for prioritizing lower FNs. It should be clear by now that we need to define a performance metric other than accuracy for our task.
 
 #### Performance metric
 
-It's not just accuracy that serves as a poor metric in this task. Precision and Recall are two common measures. Plotting the former on the y-axis and the latter on the x-axis gives you Precision-Recall (PR) curves, which are often used to evaluate algorithms.
-Recall is the fraction of positive entries that you correctly identified as positive: tp/(tp+fn).
-Precision is the fraction of entries that were actually positive out of all the ones you guessed were positive: tp/(tp+fp).
+The baseline metrics for evaluating an imbalanced classification scheme are all contained in the "confusion matrix". Remembering that positive is a fraudulent result, we can construct a matrix which counts the total number of true positive (TP), false positive (FP), true negative (TN), and false negative (FN) labels: C = [TP FN; FP TN]
 
-In our case we want to optimize for recall over precision. That is, when we are given an input that is actually positive we want to correctly predict as much as possible that it is positive, even if that means we end up with false positives. If we get false positives that lowers our precision, but since false negatives are more costly than false positives here we can accept potentially many more false positives.  
+Using these terms can can define precision: TP/(TP+FP), recall: TP/(TP+FN), accuracy: (TP+TN)/(TP+TN+FP+FN), and more. While this is a convenient construct it does not provide a singlular metric for determining performance. For that we will use recall, or the fraction of positive entries that you correctly identified as positive. We chose this because identifying fraud is far and away the most important goal of our classifiers. Accurancy is pretty much always be high, as explained earlier, and precision is much less important since we assume that FPs are not very costly compared to FNs.
 
-For the reason above precision is not a good metric for this task. For the functionality we want to optimize we will likely see precision increase over a simple majority class classifier, but we can't really be sure of the exact relationship. A better metric would be one that is guaranteed to decrease monotonically as we approach our ideal of perfect recall, regardless of what happens to precision.
-
-A metric that does work well is the Area Under the Precision-Recall Curve (AUPRC)...
+Precision and recall are often considered together in the aptly named Precision-Recall Curve (PRC), or in the related metric: Area Under the Precision-Recall Curve (AUPRC). We will consider this as well as ROC curves.
 
 #### Methods for imbalanced data
-1. Under-sampling -- Removing data from the larger class to balance the class sizes. May lead to a poorer choice of decision line due to losing data at the border of the classes.
-2. Oversampling -- Adding extra observations on top of existing minority class observations to balance out the class sizes. May lead to overfitting with some classification models.
-3. Synthetic data generation -- Generating artificial data from your existing data to balance classes. Generated data generally stays within the n-dimensional volume that minimally encloses the existing data.
-4. Cost functions-- Classification algorithms use cost functions (decision functions) to define their decision boundaries. With imbalanced data you would set the misclassification of the minority class to be much more costly, to encourage the algorithm to classify them correctly more often than the majority class.
 
-Using a few different classification algorithms we compared the synthetic data generation and alternate cost function approaches to the default algorithm. 
-For synthetic data generation we chose to use ADASYN (Adaptive Synthetic Sampling Approach for Imbalanced Learning) a generation algorithm similar to the well known SMOTE (Synthetic Minority Over-Sampling Technique) algorithm, which is ADASYN's precursor. The goal of both is to improve the class balance by increasing the number of minority class members. SMOTE places synthetic data between existing data points randomly (linear interpolation), with no preference shown to any specific points. ADASYN does the same thing but places more synthetic data points close to the boundary between classes because those are the original data points that are more difficult to learn.
-(Does this favor decision trees or SVMs or something? I imagine that all this would do for an LDA is to move the mean of the minority gaussian close to the boundary... SMOTE might be better here...)
+There are some known methods for improving performance when classifying imbalanced data. The four common solution types are given here:
+1. Under-sampling – Removing data from the larger class to balance the class sizes. May lead to a poorer choice of decision line due to losing data at the border of the classes. Lower number of samples (less information) could also exacerbate overfitting. 
+2. Oversampling – Adding additional observations "on top" of existing minority class observations to balance out the class sizes. May lead to overfitting with some classification models since new points are at the exact same locations.
+3. Synthetic data generation – Generating artificial data for your minority class from your existing data. Generated data generally stays within the volume that minimally encloses the existing data.
+4. Cost functions– Classification algorithms that use cost functions (decision functions) to define their decision boundaries can weigh a FN more heavily than other types of error to encourage the algorithm to essentially prioritize recall.
 
-We also tried changing the cost function of our methods to discourage FNs. We can build in a high "misclassification cost" when considering FNs. 
+The first three attempt to reduce the class imbalance by reducing the number of majority data point or increasing the number of minority data points. For synthetic data generation we chose to use the SMOTE (Synthetic Minority Over-Sampling Technique) and ADASYN (Adaptive Synthetic Sampling Approach for Imbalanced Learning) algorithms. SMOTE isis ADASYN’s precursor and ADASYN is essentially a specific implementation of of SMOTE. The goal of both is to improve the class balance by increasing the number of minority class members. SMOTE places synthetic data between existing data points randomly (linear interpolation between neighbors), with no preference shown to any specific points. ADASYN does the same thing but places more synthetic data points close to the boundary between classes because those are the original data points that are more difficult to learn.
 
 
 ### Classification algorithms
-Gaussian methods such as linear discriminant analysis and quadratic discriminant analysis attempt to fit a multivariate normal distribution to existing data. Each class also has a prior probability that determines how likely each class is to be found (calculated at the fraction of one class to the other by default). Due to this prior a rare class will have an extremely small probability of occurring and will likely not be more probable unless the two classes have a very good separation. WE don't know of any specific a priori reason to expect this. 
-LDA in particular has another feature that can be detrimental: the covariance matrix is shared by all classes. This means that the MVN distribution is the same shape for both classes (although of course they have different means). For the reasons above you would hope that if a minority class is not very well separated then it is at least strongly clustered into a small area in the feature space relative to the majority class. That way you could model it will a sharply peaked MVN that might be able to rise above the advantage of the majority class (due to its much larger prior). However this sharp peak cannot occur if they are forced to share the same covariance matrix. This makes LDA is very poor choice. We will consider QDA instead. 
 
-Binary decision trees are a common and effective choice for classification tasks. The MATLAB command to build a binary classification decision tree model, `fitctree`, is a CART algorithm. At each node in the tree you can make a binary decision and you work your way down the tree until you hit a terminal leaf--this is your determination. You can think about this process as splitting up m-dimensional space into blocks, where m is the number of features. You first divide the entire space into two, then one of those subspaces in two, and onwards again and again until you have made a decision based on all the features. Each of the resulting (m+1?) blocks represents a subspace that corresponds to s specific determination: a class.
+##### Gaussian methods
 
-The question then becomes how to build the tree. What are the split points chosen to create the best classifier? This is accomplished by minimizing a cost function for training points in a given block you are trying to split. The algorithm is greedy, meaning it always chooses the best prediction that each split point; it does not consider error globally. For regression predictive modeling CART (likely) minimizes the squared error. For classification it uses the Gini cost function.
+Gaussian methods such as linear discriminant analysis and quadratic discriminant analysis attempt to fit a multivariate normal distribution to existing data. In LDA the covariance matrix is shared by both classes, whereas in QDA they independent. Naive Bayes uses independent covariances but they are constrained to be diagonal. Each class also has a prior probability that determines how likely each class is to be found (calculated as the fraction of one class to the other by default). Due to this prior a rare class will have an extremely small probability of occurring and will not be likely unless the two classes have a very good separation, or the minority class is compact in feature space. If it were you could model it as a sharply peaked MVN that might be able to rise above the advantage the majority class has due to its much larger prior. This immediately suggests that LDA is a poor choice since it forces a shared covariance matrix--this means that the minorty class cannt be sharply peaked relative to the majority class distribution. For this reason we will consider QDA instead. 
 
+##### Decision Trees
 
+Binary decision trees are a common and effective choice for classification tasks. You classify an unknown observation by starting at the root node and at each node in the tree you make binary decision (meaning there are two branches) based on the features of the data used for training. You work your way up the tree until you hit a terminal leaf node. This node determines your prediction. You can think about this process as splitting up m-dimensional space into “blocks” (if you imagine the 3-dimensional version), where m is the number of features and each block represents a class prediction. It starts with the full space and splits it into two, then one of those subspaces in two, and then one of those three subspaces into two, and onwards until it finishes. The algorithm chooses where to put the boundaries based on minimizing the "Gigi index". The Gini index naturally gives high weight to the more represented class, which is a bias for the majority class. One potential issue to keep in mind is overfitting. Trees are known to overfit if you have a high number of features (we have ~30), and since there are relatively few samples of the minority class (492 out of 284807), we may not have enough data on the minority class to make a robust classifier. 
+
+##### Logistic regression
+
+Logistic regression is a method that generates probabilities that a test point is in each class using the logistic regression function. 
 
 
 ### References and usefulness
