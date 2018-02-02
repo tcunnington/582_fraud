@@ -1,10 +1,7 @@
 from collections import Counter
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import recall_score, precision_score, f1_score
-from sklearn.metrics import precision_recall_curve
-from sklearn.metrics import average_precision_score
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, average_precision_score
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import precision_recall_curve, roc_curve, auc
 from imblearn.metrics import geometric_mean_score
 from sklearn.model_selection import cross_val_score
 import pandas as pd
@@ -28,22 +25,16 @@ def run_model(Model,train_x,train_y,test_x,test_y,**kwargs):
     model.fit(train_x, train_y)
     pred = model.predict(test_x)
 
-    print get_class_name(model)
+    print '---' + get_class_name(model) + '---'
     print_metrics(test_y, pred)
 
     return model
 
-
-def run_compare_sampling(Sampler,Model,train_x,train_y,test_x,test_y,**model_kwargs):
-    print "Sampler: " + get_class_name(Sampler())
+def run_model_sampler(Sampler,Model,train_x,train_y,test_x,test_y,**model_kwargs):
+    """Wrapper for run_model to include sampling"""
     train_x_res, train_y_res = Sampler().fit_sample(train_x, train_y)
-    print_class_counts(train_y_res)
-
-    print ''
-    run_model(Model, train_x, train_y, test_x, test_y,**model_kwargs)
-    print ''
-    run_model(Model, train_x_res, train_y_res, test_x, test_y,**model_kwargs)
-    print ''
+    print "Sampler: " + get_class_name(Sampler())
+    return run_model(Model, train_x_res, train_y_res, test_x, test_y, **model_kwargs)
 
 
 #################################################
@@ -65,11 +56,9 @@ def print_class_counts(y_train):
     print(sorted(Counter(y_train).items()))
 
 def print_metrics(true, pred, *args):
+    print 'Classification Report:'
+    print classification_report(true, pred)
     print "Geometric mean:\t", geometric_mean_score(true, pred) # sqrt(recall * specificity), or sqrt(TPR * TNR)
-    print "Recall: \t", recall_score(true, pred)
-    print "Precision:\t", precision_score(true, pred)
-    # print "F1 Score:\t", f1_score(true, pred)
-    print "Accuracy:\t", accuracy_score(true, pred)
     print "Confusion mat: \n", confusion_matrix(true, pred)
     for a in args:
         print a
@@ -119,7 +108,7 @@ def tile_random_features(feature_list, df):
 
     plt.show()
 
-def plot_pr(model, test_x, test_y, ax=None, **plot_args):
+def plot_pr(model, test_x, test_y, ax=None, **plot_kwargs):
     if not ax:
         plt.figure()
         ax = plt.subplot(111)
@@ -131,10 +120,14 @@ def plot_pr(model, test_x, test_y, ax=None, **plot_args):
     pr_auc = auc(recall, precision)
     model_name = truncate_dotdot(get_class_name(model))
 
-    # TODO make more pretty?
-    plt.step(recall, precision, label='{0}, AUPRC: {1:0.2f}'.format(model_name, pr_auc), **plot_args) #, color='b', alpha=0.2, where='post')
-    # plt.fill_between(recall, precision, step='post', alpha=0.2, color='b')
 
+    if 'label' not in plot_kwargs:
+        plot_kwargs['label'] = model_name
+
+    plot_kwargs['label'] = plot_kwargs['label'] + ', AUC: {0:0.2f}'.format(pr_auc)
+
+    plt.step(recall, precision, **plot_kwargs) #, color='b', alpha=0.2, where='post')
+    # plt.fill_between(recall, precision, step='post', alpha=0.2, color='b')
     ax.legend(loc = 'lower left')
     ax.set_title('Precision-Recall curve')
     ax.set_xlabel('Recall')
@@ -144,7 +137,7 @@ def plot_pr(model, test_x, test_y, ax=None, **plot_args):
 
     return ax
 
-def plot_roc(model, test_x, test_y, ax=None):
+def plot_roc(model, test_x, test_y, ax=None, **plot_kwargs):
     if not ax:
         plt.figure()
         ax = plt.subplot(111)
@@ -154,14 +147,38 @@ def plot_roc(model, test_x, test_y, ax=None):
     roc_auc = auc(fpr, tpr)
     model_name = truncate_dotdot(get_class_name(model))
 
+    if 'label' not in plot_kwargs:
+        plot_kwargs['label'] = model_name
+
+    plot_kwargs['label'] = plot_kwargs['label'] + ', AUC: {0:0.2f}'.format(roc_auc)
+
     lw = 2
-    ax.plot(fpr, tpr, lw=lw, label='{0}, AUROC: {1:0.2f}'.format(model_name, roc_auc))
+    ax.plot(fpr, tpr, lw=lw, **plot_kwargs)
     ax.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.05])
     ax.set_xlabel('False Positive Rate')
     ax.set_ylabel('True Positive Rate')
-    ax.set_title('Receiver operating characteristic example')
+    ax.set_title('Receiver operating characteristic')
 
     ax.legend(loc="lower right")
 
+
+def plot_many_roc(models, labels, test_x, test_y):
+    plt.figure(figsize=(8,6))
+    ax = plt.subplot(111)
+
+    for m, l in zip(models, labels):
+        plot_roc(m, test_x, test_y, ax=ax, label=l)
+
+    plt.show()
+
+
+def plot_many_pr(models, labels, test_x, test_y):
+    plt.figure(figsize=(8,6))
+    ax = plt.subplot(111)
+
+    for m, l in zip(models, labels):
+        plot_pr(m, test_x, test_y, ax=ax, label=l)
+
+    plt.show()
