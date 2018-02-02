@@ -24,31 +24,6 @@ We care to a much lesser extent about false positives (FPs: mistakenly flagging 
 Because our classes are not well separated (see either ipython notebook) we will have to accept a lower accuracy in exchange for prioritizing lower FNs. 
 It should be clear by now that we need to define a performance metric other than accuracy for our task.
 
-### Results
-
-For our results we will show just the performance of our logistic regression classifier. 
-Our primary metric is the geometric mean, since it is a composite of the TPR (recall) and the TNR (see metrics section). 
-The bar plots below shows that all methods did much better than the baseline.
-
-![ROC curve](img/geometric_mean_compare.png?raw=true)
-
-ADASYN, SMOTE, and balanced do best generally, where "balanced" refers to altering the logistic regression algorithm to weight the minority class higher (inversely proportional to it's relative representation in the training data). Just one instance of training/test data is shown here.
-
-Next we have the precision-recall curve.  
-
-![Precision-recall](img/pr_compare.png?raw=true)
-
-SMOTE and ADASYN have the highest AUC scores, although many seem to perform similarly in the high-recall/low precision region which we would certainly choose to operate in. 
-Class balanced model and oversampling follow.
- 
-Lastly we have the ROC curve. Again all the methods solidly outperform the baseline, although for the most part their performance is hard to distinguish from each other here, and all have similar AUC values.
-![ROC curve](img/roc_compare.png?raw=true)
-
-Overall we can easily conclude that all of the proposed methods are improvements on the baseline. 
-The SMOTE, ADASYN and balanced cases performs well in all plots. Balanced had a slightly better geometric mean, which is our primary metric. Oversampling and undersampling appear to be inferior to other methods. Undersampling seems like the weakest according to the ROC and PR curves--perhaps this is explained by the fact that you are losing information to work with.
-Based on these results, if I were using logistic regression I would likely just use the balanced class weights since it is the simplest to implement. 
-If I were using other classification methods I would always compare with SMOTE (it runs faster than ADASYN) if I suspected that imbalanced classes could be a problem, or if I cared about recall more than accuracy. 
-
 #### Performance metrics
 
 The baseline metrics for evaluating an imbalanced classification scheme are all contained in the "confusion matrix". Remembering that positive is a fraudulent result, we can construct a matrix which counts the total number of true positive (TP), false positive (FP), true negative (TN), and false negative (FN) labels: C = [TP FN; FP TN]
@@ -74,6 +49,31 @@ The first three attempt to reduce the class imbalance by reducing the number of 
 SMOTE is ADASYN’s precursor and ADASYN is essentially a specific implementation of of SMOTE. 
 The goal of both is to improve the class balance by increasing the number of minority class members. SMOTE places synthetic data between existing data points randomly (linear interpolation between neighbors), with no preference shown to any specific points. 
 ADASYN does the same thing but places more synthetic data points close to the boundary between classes because those are the original data points that are more difficult to learn.
+
+### Results
+
+For our results we will show just the performance of our logistic regression classifier. 
+Our primary metric is the geometric mean, since it is a composite of the TPR (recall) and the TNR (see metrics section). 
+The bar plots below shows that all methods did much better than the baseline.
+
+![ROC curve](img/geometric_mean_compare.png?raw=true)
+
+ADASYN, SMOTE, and balanced do best generally, where "balanced" refers to altering the logistic regression algorithm to weight the minority class higher (inversely proportional to it's relative representation in the training data). Just one instance of training/test data is shown here.
+
+Next we have the precision-recall curve.  
+
+![Precision-recall](img/pr_compare.png?raw=true)
+
+SMOTE and ADASYN have the highest AUC scores, although many seem to perform similarly in the high-recall/low precision region which we would certainly choose to operate in. 
+Class balanced model and oversampling follow.
+ 
+Lastly we have the ROC curve. Again all the methods solidly outperform the baseline, although for the most part their performance is hard to distinguish from each other here, and all have similar AUC values.
+![ROC curve](img/roc_compare.png?raw=true)
+
+Overall we can easily conclude that all of the proposed methods are improvements on the baseline. 
+The SMOTE, ADASYN and balanced cases performs well in all plots. Balanced had a slightly better geometric mean, which is our primary metric. Oversampling and undersampling appear to be inferior to other methods. Undersampling seems like the weakest according to the ROC and PR curves--perhaps this is explained by the fact that you are losing information to work with.
+Based on these results, if I were using logistic regression I would likely just use the balanced class weights since it is the simplest to implement. 
+If I were using other classification methods I would always compare with SMOTE (it runs faster than ADASYN) if I suspected that imbalanced classes could be a problem, or if I cared about recall more than accuracy. 
 
 
 ### Classification algorithms
