@@ -1,8 +1,8 @@
-# Fraud Detection: An Imbalanced Data Problem
+# Fraud Detection: An Imbalanced Classification Problem
 
 ### The project:
 
-To explore performance of classification methods in the presence of highly imbalanced data--binary data where a majority class far outnumbers the minority class. First we cover how to evaluate methods in this context, and then specific methods for improving model performance.
+Fraud data is a common example of highly imbalanced data--data where a majority class far outnumbers the minority class--due to the relative rarity of fraud. Finding a high proportion of the minority class can be a challenge for many classifiers. This project is meant to explore specific methods for improving model performance using logistic regression, support vector classifiers, and random forests. For detailed discussion of performance metrics, algorithmic considerations, and sampling methods see the sections below Results.
 
 ### Overview
 
@@ -13,8 +13,6 @@ One important feature of this dataset is that the features have been obscured by
 There are two main challenges for us in building a classifier for this data:
 1. Many classification algorithms don't predict the minority class well when trained on such data.
 2. Some common classifier performance metrics do not align with our preference for predicting the minority class when working with data such as this.
-
-For detailed discussion of performance metrics, algorithmic considerations, and sampling methods see the sections below Results.
 
 The python library [imbalanced-learn](http://contrib.scikit-learn.org/imbalanced-learn/stable/index.html) was extremely useful in this project. It provided the sampling methods and an implementation of the geometric mean. If you want to see the details of the results, please see the "Imbalanced Data" notebook. If you want to see the initial model selection process where I chose the 3 classifiers to test, please look in "Testing Classifiers".
 
@@ -44,7 +42,7 @@ The SMOTE, ADASYN and balanced cases performs well in all plots. Balanced had a 
 Based on these results, if I were using logistic regression I would likely just use the balanced class weights since it is the simplest to implement.
 If I were using other classification methods I would always compare with SMOTE (it runs faster than ADASYN) if I suspected that imbalanced classes could be a problem, or if I cared about recall more than accuracy.
 
-#### Performance metrics
+### Performance metrics
 
 That popular algorithms have trouble with skew is not all that surprising. Algorithms often work to minimize the overall error rate, with false positives and false negatives having the value implicit value. This inherently favors the majority class however. As an example, think about what happens if you simply classified everything as the majority class. Our dataset is very imbalanced: only 0.17% of the data points are classified as the minority class. This means that if we always guess the majority class we will get 99.83% accuracy! This makes it clear that accuracy is not the metric we are most concerned with here. What we actually care _much_ more about is reducing false negatives (FNs: someone gets away with fraud). Of course, we still care about false positives (FPs: mistakenly flagging a transaction as fraud), but to a much lesser extent. With regard to fradualent transactions it's easy to imagine that FNs could be potentially much more expensive to a bank than FPs. Generally speaking, if you are _interested_ in detecting a very small number of anomalous events this will be true. More advantageous metrics than accuracy are recall, the F1 score, or the geometric mean of recall (sensitivity) and the specificity.
 
@@ -54,7 +52,7 @@ As we stated we will use recall, or the fraction of positive entries that you co
 
 Precision and recall are often considered together in the aptly named Precision-Recall Curve (PRC), or in the related metric: Area Under the Precision-Recall Curve (AUPRC). We will consider this as well as ROC curves.
 
-#### Methods for imbalanced data
+### Methods for imbalanced data
 
 There are some known methods for improving performance when classifying imbalanced data. The four approaches are:
 1. Under-sampling – Removing data from the larger class to balance the class sizes. May lead to a poorer choice of decision line due to having less information, however could help reduce compute time.

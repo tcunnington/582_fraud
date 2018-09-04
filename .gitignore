@@ -5,7 +5,8 @@
 *.pyc
 tex/*.pdf
 *.mat
-creditcard.csv
+data/
+tmp/
 .idea/
 .ipynb_checkpoints/
 
