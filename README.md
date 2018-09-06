@@ -34,7 +34,7 @@ All methods performed about the same in terms of GM metric. ADASYN was able to a
 
 Indeed in you look at the Precision Recall graph above, in the high-recall area shown on the rightside plot, all methods perform similarly, including the baseline. However it is still helped slightly by the methods shown. Lastly we have the ROC curve, which would probably be the curve we would use to choose the final method, since from a business point of view it is most simple to think in terms of the costs/benefits of TPR and FPR.
 
-![Logistic regression ROC curve](img/logit_ROC.png)
+![Logistic regression ROC curve](img/logit_roc.png)
 
 Here we can see more clearly that the methods we chose were an improvement over the baseline. Which one is the best depends on the value of the TPR you require and the value of the FPR you can tolerate. 
 
