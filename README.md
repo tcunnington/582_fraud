@@ -18,29 +18,39 @@ The python library [imbalanced-learn](http://contrib.scikit-learn.org/imbalanced
 
 ### Results
 
-For our results we will show currently just the performance of our logistic regression classifier. In the future we will use classification logistic regression, random forests, and SVMs. 
-Our primary metric is the geometric mean of the TPR (recall) and the TNR (see Performance Metrics section).
-The bar plots below shows that all methods did much better than the baseline on this metric.
+For our results we will show the performance of each of the proposed methods compared to a baseline, for each of the metrics we have identified as most important. Again the 3 mthods are logistic regression, random forests, and support vector classifiers. Our primary metric is the geometric mean (GM) of the TPR (recall) and the TNR, but it is also interesting to see how the recall and F1 score look (see Performance Metrics section).
 
-![ROC curve](img/geometric_mean_compare.png?raw=true)
+![Example features](img/example_features.png?raw=true)
 
-Here "balanced" refers to the default model class weighting scheme built into sklearn: the class weight is inversely proportional to it's relative representation in the training data. See the sklearn docs for more details. ADASYN, SMOTE, and balanced do best generally. The test was done with a 3-fold cross validation.
+As you can see in the above figure, the data was very messy and difficult to separate. The practical results of this is that you will be forced to make trade offs. Outside of a true decision making context (e.g. a business context), there is no clear answer to which is the "best" method. The choice would likely come down to how poor of an accuracy/F1 score/FPR you are willing to accept. Each classifier differs in their performance trade offs. I will discuss each classifier below, with the most detail given to the logistic regression case. 
 
-Next we have the precision-recall and ROC curves.
+All of the sampling methods (oversampling, undersampling, SMOTE, and ADASYN) altered the data until each class had the same number of points. The "Weighted" category refers to setting the `class_weight` parameter on the model to 100:1 in favor of the minority class. The "Balanced" category (for logtistic regression only) refers to the default value of class weight, determined by the relative size of each class in the training data. The result here was a more aggressive weighting to favor the minority class. See scikit-learn docs for details. All methods used a 5-fold cross validation.
 
-![Precision-recall](img/pr_compare.png?raw=true)
+![Logistic regression metrics](img/logit_methods.png?raw=true)
 
-SMOTE and ADASYN have the highest AUC scores, although many seem to perform similarly in the high-recall/low precision region which we would certainly choose to operate in.
-Class balanced model and oversampling follow.
+All methods performed about the same in terms of GM metric. ADASYN was able to acheive the best recall. The weighted bars show that a more modest class weight can still provide a big boost to GM and recall. None seem to clearly outshine the others--one with better recall will have a lower F1 score, which is very sensitive to precision. 
 
-![ROC curve](img/roc_compare.png?raw=true)
+![Logistic regression precision recall](img/logit_pr.png?raw=true)
 
-Again all the methods solidly outperform the baseline, although for the most part their performance is hard to distinguish from each other here, and all have similar AUC values.
+Indeed in you look at the Precision Recall graph above, in the high-recall area shown on the rightside plot, all methods perform similarly, including the baseline. However it is still helped slightly by the methods shown. Lastly we have the ROC curve, which would probably be the curve we would use to choose the final method, since from a business point of view it is most simple to think in terms of the costs/benefits of TPR and FPR.
 
-Overall we can easily conclude that all of the proposed methods are improvements on the baseline.
-The SMOTE, ADASYN and balanced cases performs well in all plots. Balanced had a slightly better geometric mean, which is our primary metric. Oversampling and undersampling appear to be inferior to other methods. Undersampling seems like the weakest according to the ROC and PR curves--perhaps this is explained by the fact that you are losing information to work with.
-Based on these results, if I were using logistic regression I would likely just use the balanced class weights since it is the simplest to implement.
-If I were using other classification methods I would always compare with SMOTE (it runs faster than ADASYN) if I suspected that imbalanced classes could be a problem, or if I cared about recall more than accuracy.
+![Logistic regression ROC curve](img/logit_ROC.png?raw=true)
+
+Here we can see more clearly that the methods we chose were an improvement over the baseline. Which one is the best depends on the value of the TPR you require and the value of the FPR you can tolerate. 
+
+
+![Linear SVC metrics](img/svc_methods.png?raw=true)
+
+Linear SVC results more or less mirror what we saw for LR, with all methods outperforming the baseline, all having similar GM. Again ADASYN acheived the best recall, with the rest of them trading small amounts of recall for F1 (precision proxy).
+
+![Random forest metrics](img/rf_methods.png?raw=true)
+
+Since trees are relatively insentive to large imbalances we see here that the baseline model does fairly well--on par with oversampling. Undersampling does best according to our needs, and both SMOTE and ADASYN similarly outperform the baseline. In this case weighted does the worst. If you don't know beforehand if your data will be imbalanced, a random forest looks like a good choice.
+
+The bar plots above show clearly that all methods did much better than the baseline versions when considering recall and geometric mean. It is clearly a very good idea to pick of these methods when you are dealing with imbalanced data! You should test them separately for each application however, since their performance can depends on the dataset, especially the sampling methods. 
+
+Another thing to consider is computation. If the performance is similar for all methods I would choose to use undersampling or a class weighted classifier. The class weights typically don't slow down the algorithms (but be sure to look it up!). In contrast, all sampling methods outside of undersampling lead to a larger amount of data to train. SMOTE and ADASYN can also be particularly slow to generate new data, since they use a nearest neighbors algorithm, with SMOTE being a little faster. 
+
 
 ### Performance metrics
 

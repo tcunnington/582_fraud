@@ -36,23 +36,10 @@ def test_model(model, X, y, cv=5, verbose=True):
 
     return scores
 
-# def run_model(model, train_x, train_y, test_x, test_y, verbose=True):
-#     model.fit(train_x, train_y)
-
-#     if verbose:
-#         print '---' + get_class_name(model) + '---'
-#         pred = model.predict(test_x)
-#         print_metrics(test_y, pred)
-
-#     return model
-
-# def run_model_sampler(sampler, model, train_x, train_y, test_x, test_y, **kwargs):
-#     """Wrapper for run_model to include sampling"""
-#     train_x_res, train_y_res = sampler.fit_sample(train_x, train_y)
-#     print "Sampler: " + get_class_name(sampler) + ",  Model: " + get_class_name(model)
-#     return run_model(model, train_x_res, train_y_res, test_x, test_y, **kwargs)
-
 def cv_sampler(sampler, model, X, y, cv=3, verbose=True, **kwargs):
+    """
+    Run a k-fold cross validation while using a sampling method
+    """
     kf = KFold(n_splits=cv)
     scores = defaultdict(list)
 
@@ -157,10 +144,12 @@ def plot_rand_features(feature_list, df, **kwargs):
 
 
 def tile_random_features(feature_list, df):
-    fig, axarr = plt.subplots(2, 2, figsize=(13, 10))
+    fig, axarr = plt.subplots(2, 2, figsize=(11, 8))
     for ax in np.array(axarr).flatten():
         plot_rand_features(feature_list, df, ax=ax)
 
+    plt.suptitle('Example 2D feature plots', size=16)
+    axarr[0][0].legend(labels=['legitimate', 'fraudulent'], loc = (0, 1.05), ncol=2)
     plt.show()
 
 def plot_pr(model, test_x, test_y, ax=None, **plot_kwargs):
@@ -243,6 +232,7 @@ def plot_many_roc(models, labels, test_x, test_y):
         ax2.set_xlim([0.0, 0.4])
         ax2.set_ylim([0.8, 1.0])
 
+    plt.suptitle(get_class_name(models[0]), size=16)
     plt.show()
     # return ax1, ax2
 
@@ -258,6 +248,7 @@ def plot_many_pr(models, labels, test_x, test_y, **plot_kwargs):
         ax2.set_xlim([0.8, 1.0])
         ax2.legend(loc = 'upper right')
 
+    plt.suptitle(get_class_name(models[0]), size=16)
     plt.show()
     # return ax1, ax2
 
