@@ -34,7 +34,7 @@ All methods performed about the same in terms of GM metric. ADASYN was able to a
 
 Indeed in you look at the Precision Recall graph above, in the high-recall area shown on the rightside plot, all methods perform similarly, including the baseline. However it is still helped slightly by the methods shown. Lastly we have the ROC curve, which would probably be the curve we would use to choose the final method, since from a business point of view it is most simple to think in terms of the costs/benefits of TPR and FPR.
 
-![Logistic regression ROC curve](img/logit_ROC.png?raw=true)
+![Logistic regression ROC curve](img/logit_ROC.png)
 
 Here we can see more clearly that the methods we chose were an improvement over the baseline. Which one is the best depends on the value of the TPR you require and the value of the FPR you can tolerate. 
 
@@ -47,7 +47,7 @@ Linear SVC results more or less mirror what we saw for LR, with all methods outp
 
 Since trees are relatively insentive to large imbalances we see here that the baseline model does fairly well--on par with oversampling. Undersampling does best according to our needs, and both SMOTE and ADASYN similarly outperform the baseline. In this case weighted does the worst. If you don't know beforehand if your data will be imbalanced, a random forest looks like a good choice.
 
-The bar plots above show clearly that all methods did much better than the baseline versions when considering recall and geometric mean. It is clearly a very good idea to pick of these methods when you are dealing with imbalanced data! You should test them separately for each application however, since their performance can depends on the dataset, especially the sampling methods. 
+The bar plots above show clearly that for the SVC and logistic regression classifiers all methods did much better than the baseline in terms of recall and geometric mean. It is clearly a very good idea to pick of these methods when you are dealing with imbalanced data with one of these classifiers! You should test them separately for each application however, since their performance can depends on the dataset, especially the sampling methods. 
 
 Another thing to consider is computation. If the performance is similar for all methods I would choose to use undersampling or a class weighted classifier. The class weights typically don't slow down the algorithms (but be sure to look it up!). In contrast, all sampling methods outside of undersampling lead to a larger amount of data to train. SMOTE and ADASYN can also be particularly slow to generate new data, since they use a nearest neighbors algorithm, with SMOTE being a little faster. 
 
